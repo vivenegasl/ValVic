@@ -51,7 +51,7 @@
 - [ ] Migrar `generador.py` de Sheets a MySQL
 - [ ] Migrar `notificaciones.py` de CallMeBot a 360dialog
 - [x] Mover archivos legacy a carpeta `legacy/` (generador, sheets, notificaciones, main, clientes, config)
-- [/] Panel web del negocio (`/panel/agenda`, `/panel/horarios`)
+- [x] Panel web del negocio (`/panel/agenda`, `/panel/horarios`, `/panel/login`)
 - [ ] Página del paciente (`valvic.cl/cita/TOKEN`)
 - [ ] Integraciones Google My Business + Meta Graph
 - [ ] Motor de reportes completo

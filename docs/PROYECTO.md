@@ -8,6 +8,10 @@
 
 Estas restricciones son NO NEGOCIABLES. Si una propuesta técnica viola cualquiera de estas reglas, recházala sin importar cuán elegante parezca la solución alternativa.
 
+**Lectura Obligatoria y Estándar Senior (NUEVA REGLA):**
+- **Contexto Mandatorio:** Es OBLIGATORIO Y ESTRICTO que cualquier asistente de IA (Claude, Gemini, etc.) lea el contenido completo de este archivo (`PROYECTO.md`) como su primer paso de contexto en cualquier sesión, sin excepciones.
+- **Calidad Senior:** Todo código debe soportar la revisión de un equipo de ingenieros Senior. Esto exige: arquitectura limpia, principios DRY (Don't Repeat Yourself), código altamente modular y manejo seguro de errores. Si una restricción (como usar Vanilla HTML/JS) induce a repetir código (ej. menús laterales), el agente DEBE proponer proactivamente soluciones modulares compatibles (ej. inyección por Web Components o JS Fetch) para mantener el estándar.
+
 **Stack — nunca proponer alternativas a:**
 - **Base de datos:** MySQL HeatWave en Oracle. NUNCA PostgreSQL, Supabase, o PlanetScale.
 - **Backend:** Python 3 + FastAPI. NUNCA Node.js como runtime principal, NUNCA frameworks de agentes abstractos (LangChain, CrewAI, etc.).
