@@ -76,5 +76,4 @@ ValVic es done-for-you + WhatsApp nativo → justifica 2-3x el precio de la comp
 La web debe vender el dolor, no la tecnología.
 - **Hero section:** "Tu clínica pierde citas cada semana. Las recuperamos automáticamente." 
 - **Sección de Servicios:** Mostrar los precios abiertamente (desde $80 USD/mes).
-- **Sección de Rubros:** Grid con los 8 verticales y el problema específico de cada uno (ej. dental = "cada cita vacía son $150 USD").
 - **Meta description:** "Automatiza las citas de tu clínica dental, spa o veterinaria con IA. Implementación en 5 días. Desde $80 USD/mes."
