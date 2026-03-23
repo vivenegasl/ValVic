@@ -2,6 +2,12 @@
 
 Estas reglas son de cumplimiento obligatorio para mantener la consistencia del proyecto a través de diferentes modelos de IA y desarrolladores.
 
+## 0. Estándares Senior (Mandatorio)
+- **Calidad de Ingeniería:** El código debe ser modular, escalable y seguir principios **DRY** (Don't Repeat Yourself).
+- **Incompatibilidad de Frameworks:** NUNCA proponer React, Vue, LangChain o n8n. ValVic es 100% Vanilla y Python nativo.
+- **Modularidad forzada:** Si el uso de HTML puro induce a la repetición (ej. sidebars), se DEBE proponer una solución modular vía JS Fetch o Web Components nativos.
+- **Manejo de Errores:** Logging estricto y bloques `try/except` en toda interacción con APIs externas (360dialog, Claude, etc.).
+
 ## 1. Frontend (Principios de Pureza)
 - **Vanilla Only:** Usar exclusivamente HTML5, CSS3 y JavaScript nativo. NUNCA usar frameworks (React, Vue, etc.).
 - **Separación de Concernimientos:** No usar estilos inline ni scripts inline (salvo excepciones técnicas debidamente comentadas).
@@ -26,4 +32,17 @@ Estas reglas son de cumplimiento obligatorio para mantener la consistencia del p
 
 ## 4. Convenciones de Código
 - **Nombres en Inglés/Español:** Mantener la consistencia actual (Variables/Funciones en camelCase o snake_case según el lenguaje).
-- **Documentación:** Todo archivo nuevo debe comenzar con un encabezado de comentario describiendo su propósito. 
+- **Documentación:** Todo archivo nuevo debe comenzar con un encabezado de comentario describiendo su propósito.
+
+## 5. Requisitos de Datos y Seguridad
+- **PKs UUID:** Siempre usar UUID string para IDs expuestos en base de datos.
+- **Pydantic v2:** Uso obligatorio para de-serialización y validación de esquemas en Python.
+- **Cookies Seguras:** Autenticación vía JWT usando cookies `HttpOnly` y `Secure`.
+
+## 6. Proceso de Desarrollo (Metamodelo SPARC)
+Antes de programar cualquier nueva funcionalidad o agente, se debe seguir este flujo:
+1. **Especificación:** Definir límites de autonomía y breaks de emergencia.
+2. **Tools:** Definir lista exacta de funciones de acceso.
+3. **Schemas:** Definir entradas/salidas estrictas vía Pydantic.
+4. **Error Handling:** Definir política de reintentos (backoff exponencial).
+5. **Testing:** Simulación CLI antes de despliegue en producción.

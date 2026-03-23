@@ -22,7 +22,17 @@ Mapa rápido para entender la ubicación de los archivos y la lógica del sistem
 ### 4. `/.agent/brain/` (Memoria Compartida)
 - Lugar donde reside el contexto para IAs (este directorio).
 
-## 🔌 Flujos Técnicos
+## 🏢 Infraestructura de ValVic
+- **Hostinger Business:** Alojamiento del Frontend estático (HTML/JS/CSS).
+- **Oracle Cloud (Free Tier):** Instancia VM Ampere (4 CPU, 24GB RAM) alojando la base de datos MySQL HeatWave y la API FastAPI.
+- **Automatización:** Crontab de Linux ejecutando scripts de Python nativo (Sin n8n/Make).
+
+## 🔌 APIs Externas Autorizadas
+- **Claude (Anthropic):** Modelos `sonnet` para lógica compleja y `haiku` para clasificación masiva.
+- **Google Places API v1:** Búsqueda avanzada de prospectos (vía `searchText` con FieldMasks).
+- **360dialog:** Canal oficial BSP para la API de WhatsApp Business.
+
+## 🔗 Flujos Técnicos
 1. **Petición Cliente:** Entra por `360dialog` -> Procesa en `FastAPI` (Oracle) -> Responde vía `Claude`.
 2. **Dashboard UI:** El usuario accede a `/panel/login.html` -> Valida credenciales -> Carga `agenda.html` inyectando datos corporativos desde MySQL.
 3. **Estilo:** Carga dinámica de variables CSS en el `:root` de `panel.css` permite cambios de tema instantáneos (ej: de Azul a Esmeralda).
