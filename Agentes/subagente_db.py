@@ -1,4 +1,4 @@
-"""
+﻿"""
 subagente_db.py
 ─────────────────────────────────────────────────────────────────────────────
 Subagente de persistencia para el prospector de ValVic.
@@ -619,13 +619,44 @@ class SubagenteDB:
             total += cnt
         lineas.append(f"  {'─' * 50}")
         lineas.append(f"  {'TOTAL':<22}{'':>26} {total}")
+
+    # â”€â”€ Multi-vertical â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    def obtener_por_estado_vertical(self, estado: str, vertical: str, limite: int = 100) -> list[dict]:
+        resultado = _sqlite_obtener_vertical(estado, vertical, limite)
+        return resultado.datos or []
+
+    def obtener_no_contactados_vertical(self, vertical: str, limite: int = 30) -> list[dict]:
+        resultado = _sqlite_no_contactados_vertical(vertical, limite)
+        return resultado.datos or []
+
+    def resumen_vertical(self, vertical: str) -> str:
+        stats = _sqlite_contar_vertical(vertical).datos or []
+        if not stats:
+            return "  Pipeline vacÃ­o"
+        lineas = []
+        total  = 0
+        for s in stats:
+            cnt   = s["total"]
+            barra = "â–ˆ" * min(cnt, 25) + "â–‘" * max(0, 25 - min(cnt, 25))
+            lineas.append(f"  {s['estado']:<22} {barra} {cnt}")
+            total += cnt
+        lineas.append(f"  {'â”€' * 50}")
+        lineas.append(f"  {'TOTAL':<22}{'':<26} {total}")
         return "\n".join(lineas)
 
+    async def obtener_por_estado_vertical_async(self, estado: str, vertical: str, limite: int = 100) -> list[dict]:
+        resultado = _sqlite_obtener_vertical(estado, vertical, limite)
+        return resultado.datos or []
 
-# ════════════════════════════════════════════════════════════════════════════
-#  EXTENSIONES MULTI-VERTICAL
-#  Métodos adicionales para filtrar por vertical y campo website
-# ════════════════════════════════════════════════════════════════════════════
+    async def obtener_no_contactados_vertical_async(self, vertical: str, limite: int = 30) -> list[dict]:
+        resultado = _sqlite_no_contactados_vertical(vertical, limite)
+        return resultado.datos or []
+
+
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+#  HELPERS PRIVADOS MULTI-VERTICAL
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def _sqlite_obtener_vertical(estado: str, vertical: str, limite: int) -> ResultadoDB:
     with sqlite3.connect(DB_PATH) as conn:
@@ -662,45 +693,3 @@ def _sqlite_contar_vertical(vertical: str) -> ResultadoDB:
             GROUP BY estado ORDER BY total DESC
         """, (vertical,)).fetchall()
         return ResultadoDB(ok=True, datos=[{"estado": r[0], "total": r[1]} for r in rows])
-
-
-# Monkey-patch en SubagenteDB para agregar los métodos multi-vertical
-def _obtener_por_estado_vertical(self, estado: str, vertical: str, limite: int = 100) -> list[dict]:
-    resultado = _sqlite_obtener_vertical(estado, vertical, limite)
-    return resultado.datos or []
-
-def _obtener_no_contactados_vertical(self, vertical: str, limite: int = 30) -> list[dict]:
-    resultado = _sqlite_no_contactados_vertical(vertical, limite)
-    return resultado.datos or []
-
-def _resumen_vertical(self, vertical: str) -> str:
-    stats = _sqlite_contar_vertical(vertical).datos or []
-    if not stats:
-        return "  Pipeline vacío"
-    lineas = []
-    total  = 0
-    for s in stats:
-        cnt   = s["total"]
-        barra = "█" * min(cnt, 25) + "░" * max(0, 25 - min(cnt, 25))
-        lineas.append(f"  {s['estado']:<22} {barra} {cnt}")
-        total += cnt
-    lineas.append(f"  {'─' * 50}")
-    lineas.append(f"  {'TOTAL':<22}{'':>26} {total}")
-    return "\n".join(lineas)
-
-async def _obtener_por_estado_vertical_async(self, estado: str, vertical: str, limite: int = 100) -> list[dict]:
-    # En SQLite esto es sincrónico pero rápido, se wrappea en asíncrono.
-    resultado = _sqlite_obtener_vertical(estado, vertical, limite)
-    return resultado.datos or []
-
-async def _obtener_no_contactados_vertical_async(self, vertical: str, limite: int = 30) -> list[dict]:
-    resultado = _sqlite_no_contactados_vertical(vertical, limite)
-    return resultado.datos or []
-
-# Agregar métodos a la clase dinámicamente
-import types
-SubagenteDB.obtener_por_estado_vertical           = _obtener_por_estado_vertical
-SubagenteDB.obtener_por_estado_vertical_async     = _obtener_por_estado_vertical_async
-SubagenteDB.obtener_no_contactados_vertical       = _obtener_no_contactados_vertical
-SubagenteDB.obtener_no_contactados_vertical_async = _obtener_no_contactados_vertical_async
-SubagenteDB.resumen_vertical                      = _resumen_vertical

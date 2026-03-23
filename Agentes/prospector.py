@@ -426,14 +426,14 @@ async def calificar_lote(prospectos: list[dict], cfg: dict) -> list[ProspectoCal
             return await _calificar_uno(p, cfg)
 
     log.info(f"Calificando {len(prospectos)} prospectos en paralelo...")
-    t0 = asyncio.get_event_loop().time()
+    t0 = asyncio.get_running_loop().time()
 
     resultados = await asyncio.gather(
         *[con_semaforo(p) for p in prospectos],
         return_exceptions=True,
     )
 
-    duracion = asyncio.get_event_loop().time() - t0
+    duracion = asyncio.get_running_loop().time() - t0
     validos  = [r for r in resultados if isinstance(r, ProspectoCalificado)]
     log.info(f"Completado: {len(validos)}/{len(prospectos)} en {duracion:.1f}s")
     return validos

@@ -59,13 +59,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 9px;
             font-family: 'Fraunces', serif;
-            font-size: 28px;
+            font-size: 20px;
             font-weight: 700;
             color: white;
+            letter-spacing: -.5px;
             margin-bottom: 2rem;
             text-decoration: none;
+        }
+        .brand-icon {
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
+            border-radius: 6px;
         }
         .brand span { color: var(--blue2); }
 
@@ -128,10 +135,7 @@
 
     <div class="login-box">
         <a href="../index.html" class="brand">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="24" height="24" rx="6" fill="#2457F5"/>
-                <path d="M7 8L12 16L17 8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <img src="../logo-favicon.png" alt="ValVic" class="brand-icon" width="30" height="30" loading="lazy">
             Val<span>Vic</span>
         </a>
 
