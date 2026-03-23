@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Seguro - ValVic Panel</title>
+    <!-- Mismas fuentes premium de ValVic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --dark: #080D1A;
+            --dark2: #0D1528;
+            --blue: #2457F5;
+            --blue2: #4B79FF;
+            --ink-dark: rgba(255,255,255,.92);
+            --ink-dark2: rgba(255,255,255,.5);
+            --border-dark: rgba(255,255,255,.07);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--dark);
+            color: var(--ink-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(36,87,245,.1) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .login-box {
+            background: rgba(13,21,40, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-dark);
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            z-index: 1;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Fraunces', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 2rem;
+            text-decoration: none;
+        }
+        .brand span { color: var(--blue2); }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: var(--ink-dark2);
+            margin-bottom: 6px;
+        }
+        .form-input {
+            width: 100%;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border-dark);
+            color: white;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: var(--blue);
+            background: rgba(36,87,245,.05);
+            box-shadow: 0 0 0 3px rgba(36,87,245,.15);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--blue);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+            box-shadow: 0 8px 20px rgba(36,87,245,.25);
+        }
+        .btn-submit:hover {
+            background: var(--blue2);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(36,87,245,.4);
+        }
+
+        .error-msg {
+            color: #EA3943;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <a href="../index.html" class="brand">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="6" fill="#2457F5"/>
+                <path d="M7 8L12 16L17 8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Val<span>Vic</span>
+        </a>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label">Correo Clínico (o Panel)</label>
+                <input type="email" class="form-input" id="email" placeholder="contacto@clinica.cl" required autocomplete="email">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Contraseña (JWT Secure)</label>
+                <input type="password" class="form-input" id="password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-submit">Ingresar al Panel</button>
+            <div class="error-msg" id="errorMsg">Credenciales inválidas o servidor backend apagado.</div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('.btn-submit');
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Autenticando...';
+            
+            // Simulación asíncrona JWT de FastAPI
+            setTimeout(() => {
+                // Como es una prueba visual para el fundador, redirigimos directo a agenda
+                // En prod, aquí se haría fetch('/api/login') esperando Cookie HttpOnly
+                window.location.href = "agenda.html";
+            }, 800);
+        });
+    </script>
+</body>
+</html>

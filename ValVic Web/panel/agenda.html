@@ -28,28 +28,28 @@
         </a>
 
         <nav class="nav-menu">
-            <a href="#" class="nav-link">
+            <a href="agenda.html" class="nav-link">
                 <i class="ph ph-squares-four nav-icon"></i>
                 Dashboard
             </a>
-            <a href="#" class="nav-link active">
+            <a href="agenda.html" class="nav-link active">
                 <i class="ph ph-calendar-blank nav-icon"></i>
                 Agenda / Citas
             </a>
-            <a href="#" class="nav-link">
+            <a href="pacientes.html" class="nav-link">
                 <i class="ph ph-users nav-icon"></i>
-                Pacientes
+                Pacientes CRM
             </a>
-            <a href="#" class="nav-link">
+            <a href="configuracion.html" class="nav-link">
                 <i class="ph ph-robot nav-icon"></i>
                 IA de Vicky
             </a>
             <div style="flex:1"></div>
-            <a href="#" class="nav-link" style="color: var(--ink-dark3);">
+            <a href="configuracion.html" class="nav-link" style="color: var(--ink-dark3);">
                 <i class="ph ph-gear nav-icon"></i>
                 Configuración
             </a>
-            <a href="#" class="nav-link" style="color: var(--ink-dark3);">
+            <a href="#" class="nav-link" style="color: var(--ink-dark3);" onclick="cerrarSesion()">
                 <i class="ph ph-sign-out nav-icon"></i>
                 Cerrar Sesión
             </a>
@@ -211,6 +211,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', fetchAgenda);
+
+        function cerrarSesion() {
+            // Borrado del JWT/Cookie y redirección al validador seguro
+            window.location.href = "login.html";
+        }
     </script>
 </body>
 </html>

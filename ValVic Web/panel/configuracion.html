@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración IA - ValVic CRM</title>
+    <!-- Mismas fuentes premium de ValVic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/panel.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .settings-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-dark);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .settings-card h3 {
+            font-size: 18px;
+            color: white;
+            margin-bottom: 0.5rem;
+            font-family: 'Fraunces', serif;
+        }
+        .settings-card p {
+            font-size: 13px;
+            color: var(--ink-dark2);
+            margin-bottom: 1.5rem;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--ink-dark2);
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border-dark);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            outline: none;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(36,87,245,.15);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="../index.html" class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="6" fill="#2457F5"/>
+                <path d="M7 8L12 16L17 8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Val<span>Vic</span>
+        </a>
+
+        <nav class="nav-menu">
+            <a href="agenda.html" class="nav-link">
+                <i class="ph ph-squares-four nav-icon"></i>
+                Dashboard
+            </a>
+            <a href="agenda.html" class="nav-link">
+                <i class="ph ph-calendar-blank nav-icon"></i>
+                Agenda / Citas
+            </a>
+            <a href="pacientes.html" class="nav-link">
+                <i class="ph ph-users nav-icon"></i>
+                Pacientes CRM
+            </a>
+            <a href="configuracion.html" class="nav-link active">
+                <i class="ph ph-robot nav-icon"></i>
+                IA de Vicky
+            </a>
+            <div style="flex:1"></div>
+            <a href="configuracion.html" class="nav-link active" style="color: var(--blue2);">
+                <i class="ph ph-gear nav-icon"></i>
+                Configuración
+            </a>
+            <a href="#" class="nav-link" style="color: var(--ink-dark3);" onclick="cerrarSesion()">
+                <i class="ph ph-sign-out nav-icon"></i>
+                Cerrar Sesión
+            </a>
+        </nav>
+    </aside>
+
+    <!-- ESCRITORIO PRINCIPAL -->
+    <main class="desk">
+        <header class="topbar">
+            <h1 class="topbar-title">Configuración del Agente</h1>
+            <div class="user-profile">
+                <div class="user-info" style="text-align: right;">
+                    <span class="user-name">Dra. Camila Rojas</span>
+                    <span class="user-role">Administrador</span>
+                </div>
+                <div class="user-avatar">CR</div>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+            
+            <div class="settings-card">
+                <h3>Comportamiento Cierre de Ventas (IA)</h3>
+                <p>Ajustes finos para la escalera de concesiones y tolerancia de precios definidos en VENTAS.md</p>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mensaje Inicial (System Prompt Override)</label>
+                        <textarea rows="4" placeholder="Ej: Eres la recepcionista principal de la Clínica Dental Sonrisas..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Máximo Descuento Permitido (%)</label>
+                        <input type="number" value="15" min="0" max="50">
+                        <label style="margin-top: 10px;">Intercambios antes de escalado a humano</label>
+                        <input type="number" value="5" min="2" max="15">
+                    </div>
+                </div>
+                <button class="btn-primary">Guardar Reglas IA</button>
+            </div>
+
+            <div class="settings-card">
+                <h3>Integraciones</h3>
+                <p>Conecta la API de 360dialog y sistemas de facturación/calendario</p>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>360dialog API KEY (WhatsApp)</label>
+                        <input type="password" value="**************">
+                    </div>
+                    <div class="form-group">
+                        <label>Webhook URL (Retorno)</label>
+                        <input type="text" value="https://api.valvic.cl/webhook/whatsapp" disabled style="opacity: 0.6;">
+                    </div>
+                </div>
+                <button class="btn-primary">Vincular 360dialog</button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        function cerrarSesion() {
+            // Simulando borrado de JWT/Cookies
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>
