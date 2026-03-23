@@ -5,7 +5,7 @@ Estas reglas son de cumplimiento obligatorio para mantener la consistencia del p
 ## 0. Estándares Senior (Mandatorio)
 - **Calidad de Ingeniería:** El código debe ser modular, escalable y seguir principios **DRY** (Don't Repeat Yourself).
 - **Incompatibilidad de Frameworks:** NUNCA proponer React, Vue, LangChain o n8n. ValVic es 100% Vanilla y Python nativo.
-- **Modularidad forzada:** Si el uso de HTML puro induce a la repetición (ej. sidebars), se DEBE proponer una solución modular vía JS Fetch o Web Components nativos.
+- **Solución Modular Proactiva (REGLA DE ORO):** Si una restricción (como usar Vanilla HTML/JS) induce a repetir código (ej. menús laterales), el agente DEBE proponer proactivamente soluciones modulares compatibles (ej. inyección por Web Components o JS Fetch) para mantener el estándar.
 - **Manejo de Errores:** Logging estricto y bloques `try/except` en toda interacción con APIs externas (360dialog, Claude, etc.).
 
 ## 1. Frontend (Principios de Pureza)
