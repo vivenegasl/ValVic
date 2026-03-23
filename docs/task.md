@@ -14,12 +14,13 @@
 - [x] Arreglar `subagente_db.py` — lectura MySQL (métodos async con aiomysql)
 - [x] Eliminar `config.py` legacy con credenciales hardcodeadas (en `Estructuras/`)
 
-## Fase 2 — Actualización Web (según PROYECTO.md)
-- [x] Precios web service: implementación=$120
-- [x] Formulario: agregar verticales al dropdown (10 opciones incluyendo Dental, Veterinaria, Spa, etc.)
-- [x] Footer: © 2026
-- [x] Meta description: actualizada con foco en citas/dental/spa/veterinaria
-- [x] FAQ: agregar las 4 preguntas (implementación, sistema actual, satisfacción, tipo negocio)
+## Fase 2 — Actualización Web & Branding ✅
+- [x] Unificación de marca: "Val Vic" → "**ValVic**" en toda la web.
+- [x] Temática visual: Adopción de paleta **Esmeralda Premium** con acentos Rubí.
+- [x] Logotipos: Implementación de `favicon-180-transparent.png` (transparencia total).
+- [x] Interactividad Landing: Rastro de luz (`cursor-glow`) reactivo (Emerald/Ruby).
+- [x] Refactorización Panel: Separación estricta de CSS (`panel.css`) y JS (`agenda.js`).
+- [x] Corrección Smooth-Scroll en menú de navegación.
 
 
 ## Fase 3 — Entorno de Desarrollo ✅
@@ -27,36 +28,38 @@
 - [x] Instalar dependencias de `requirements.txt` (fastapi, anthropic, httpx, pydantic, uvicorn, etc.)
 - [x] Resolver errores de importación del IDE (fastapi, pydantic, etc.)
 
-## Fase 4 — Conversión SQL PostgreSQL → MySQL
-- [x] Convertir `valvic_schema_principal.sql` (gen_random_uuid→UUID, IDENTITY→AUTO_INCREMENT, timestamptz→DATETIME, etc.)
-- [x] Convertir `valvic_schema_reportes.sql`
+## Fase 4 — Conversión SQL PostgreSQL → MySQL ✅
+- [x] Convertir `valvic_schema_principal.sql` a MySQL HeatWave.
+- [x] Convertir `valvic_schema_reportes.sql` a MySQL HeatWave.
 
-## Fase 5 — Infraestructura Oracle (BLOQUEANTE: requiere 2FA con teléfono)
-- [ ] Activar Oracle VM
-- [ ] Crear usuario MySQL `valvic_app` en HeatWave
-- [ ] Ejecutar `schema_prospeccion_mysql.sql` en MySQL
-- [ ] Ejecutar schemas principales (post-conversión MySQL)
-- [ ] Correr `setup_oracle.sh` en la VM
-- [ ] Configurar SSL en api.valvic.cl con certbot
-- [ ] Iniciar servicio `valvic-vicky` con systemd
+## Fase 5 — Infraestructura Oracle (BLOQUEANTE)
+- [ ] Activar Oracle VM (requiere 2FA con teléfono).
+- [ ] Crear usuario MySQL `valvic_app` en HeatWave.
+- [ ] Ejecutar schemas principales en MySQL.
+- [ ] Correr `setup_oracle.sh` en la VM.
+- [ ] Configurar SSL en api.valvic.cl con certbot.
 
-## Fase 6 — Pruebas Locales (sin Oracle)
-- [ ] Configurar `ANTHROPIC_API_KEY` en `.env`
-- [ ] `python prospector.py --vertical dental --ciudad Santiago --cantidad 10 --test`
-- [ ] `python agente_conversacion.py --simular --telefono "+56912345678"`
+## Fase 6 — Pruebas Locales (Pre-Migración Meta)
+- [x] Configurar `ANTHROPIC_API_KEY` en `.env`.
+- [ ] Test de flujo conversacional con simulador de Agente.
 
-## Fase 7 — Post-Oracle (cuando Oracle esté activo)
-- [ ] Configurar webhook 360dialog → `https://api.valvic.cl/webhook/whatsapp`
-- [ ] Primer lote real: `python prospector.py --vertical dental --ciudad Santiago --cantidad 50`
-- [ ] Migrar `generador.py` de Sheets a MySQL
-- [ ] Migrar `notificaciones.py` de CallMeBot a 360dialog
-- [x] Mover archivos legacy a carpeta `legacy/` (generador, sheets, notificaciones, main, clientes, config)
-- [x] Panel web del negocio (`/panel/agenda`, `/panel/horarios`, `/panel/login`)
-- [ ] Página del paciente (`valvic.cl/cita/TOKEN`)
-- [ ] Integraciones Google My Business + Meta Graph
-- [ ] Motor de reportes completo
-- [ ] Agente de seguimiento (2do mensaje a 3 días sin respuesta)
-- [ ] Sistema de cobro (Flow/Khipu) integrado en cierre de Vicky
+## Fase 7 — Migración a Meta WhatsApp Cloud API (Sustituye 360dialog)
+- [x] Diseñar plan de migración (`docs/MIGRACION_META_API.md`).
+- [ ] Crear App en Meta Developer Portal.
+- [ ] Configurar Webhook de verificación (GET/POST) en FastAPI.
+- [ ] Actualizar `agente_conversacion.py` con endpoints de Graph API v20.0.
+- [ ] Pruebas de envío/recepción directo con Meta.
+
+## Fase 8 — Despliegue y Orquestación (Opus/Sonnet/Gemini)
+- [ ] **Planificar con Opus 4.6:** Usar el Master Prompt para desglosar subtareas.
+- [ ] **Tareas Complejas (Sonnet):** Lógica de agentes, integración Meta API, Seguridad JWT.
+- [ ] **Tareas Baja Complejidad (Gemini 3.1):** SEO por vertical, limpieza HTML, ajustes menores.
+
+## Fase 9 — Post-Lanzamiento
+- [ ] Página de cita del paciente (`valvic.cl/cita/TOKEN`).
+- [ ] Integraciones Google My Business.
+- [ ] Sistema de cobro (Flow/Khipu) integrado.
+- [ ] Agente de seguimiento (2do mensaje).
 
 ## Fase 8 — Mejoras Técnicas
 - [x] Timeout en llamadas Claude API (ya tiene en clasificador, falta en generar_respuesta_vicky)
