@@ -84,8 +84,8 @@
                         <i class="ph ph-calendar-check"></i>
                     </div>
                     <div class="stat-info">
-                        <span class="stat-val">12</span>
-                        <span class="stat-label">Citas para Hoy</span>
+                        <span class="stat-val" id="stat-citas">-</span>
+                        <span class="stat-label">Citas ValVic Acumuladas</span>
                     </div>
                 </div>
                 
@@ -119,63 +119,98 @@
                 </button>
             </div>
 
-            <div class="agenda-list">
-                <!-- Header -->
-                <div class="agenda-item agenda-header">
-                    <span>Hora</span>
-                    <span>Paciente</span>
-                    <span>Servicio</span>
-                    <span>Estado</span>
-                    <span>Acción</span>
+            <div class="agenda-list" id="agenda-container">
+                <div style="padding: 3rem; text-align: center; color: var(--ink-dark3);">
+                    <i class="ph ph-spinner-gap ph-spin" style="font-size: 28px; margin-bottom: 12px; display:inline-block; animation: spin 1s linear infinite;"></i><br>
+                    Cargando citas en tiempo real...
                 </div>
-
-                <!-- Fila 1 -->
-                <div class="agenda-item">
-                    <div class="time-badge">09:30</div>
-                    <div class="patient-info">
-                        <span class="patient-name">Carlos Mendoza</span>
-                        <span class="patient-phone">+56 9 8273 1122</span>
-                    </div>
-                    <div><span class="service-tag">Limpieza Dental</span></div>
-                    <div><span class="badge-status status-confirmed">Confirmada</span></div>
-                    <div><button class="action-btn" title="Ver detalles"><i class="ph ph-dots-three"></i></button></div>
-                </div>
-
-                <!-- Fila 2 -->
-                <div class="agenda-item">
-                    <div class="time-badge">11:00</div>
-                    <div class="patient-info">
-                        <span class="patient-name">Javiera Silva</span>
-                        <span class="patient-phone">+56 9 4455 6677</span>
-                    </div>
-                    <div><span class="service-tag">Evaluación Ortodoncia</span></div>
-                    <div><span class="badge-status status-pending">Por IA</span></div>
-                    <div><button class="action-btn" title="Ver detalles"><i class="ph ph-dots-three"></i></button></div>
-                </div>
-
-                <!-- Fila 3 -->
-                <div class="agenda-item">
-                    <div class="time-badge">14:15</div>
-                    <div class="patient-info">
-                        <span class="patient-name">Roberto Fuentes</span>
-                        <span class="patient-phone">+56 9 9988 7766</span>
-                    </div>
-                    <div><span class="service-tag">Extracción Muela</span></div>
-                    <div><span class="badge-status status-confirmed">Confirmada</span></div>
-                    <div><button class="action-btn" title="Ver detalles"><i class="ph ph-dots-three"></i></button></div>
-                </div>
-                
             </div>
+            <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
             <!-- Fin Tabla Agenda -->
 
         </div>
     </main>
 
-    <!-- Dummy JS para simular interactividad básica -->
     <script>
-        // En el futuro, aquí se conectará Fetch API con FastAPI 
-        // para renderizar citas dinámicamente desde SQLite/MySQL
-        console.log("ValVic Panel Initialization Complete.");
+        async function fetchAgenda() {
+            try {
+                // Fetch al endpoint recién agregado en agente_conversacion.py
+                const response = await fetch('/api/agenda');
+                if (!response.ok) throw new Error("HTTP error " + response.status);
+                const data = await response.json();
+                renderAgenda(data.citas);
+            } catch (error) {
+                console.error("Error cargando agenda:", error);
+                document.getElementById('agenda-container').innerHTML = `
+                    <div style="padding: 3rem; text-align: center; color: rgba(234, 57, 67, 0.9);">
+                        <i class="ph ph-warning-circle" style="font-size: 32px; margin-bottom: 12px; display:inline-block;"></i><br>
+                        <strong style="color: white; font-size: 15px;">Servidor Desconectado</strong><br><br>
+                        <span style="font-size:13px; color: var(--ink-dark3);">
+                            Para ver datos reales, el backend debe estar corriendo.<br>
+                            Abre tu terminal y ejecuta:<br>
+                            <code style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; margin-top: 10px; display:inline-block; color: white;">uvicorn agente_conversacion:app --host 0.0.0.0 --port 8000</code>
+                        </span>
+                    </div>
+                `;
+            }
+        }
+
+        function renderAgenda(citas) {
+            const container = document.getElementById('agenda-container');
+            
+            if (!citas || citas.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 3rem; text-align: center; color: var(--ink-dark3);">
+                        <i class="ph ph-calendar-blank" style="font-size: 32px; margin-bottom: 12px; display:inline-block; opacity:0.5;"></i><br>
+                        No hay citas agendadas por la IA actualmente.
+                    </div>`;
+                document.getElementById('stat-citas').innerText = "0";
+                return;
+            }
+
+            // Actualizar stats
+            document.getElementById('stat-citas').innerText = citas.length;
+
+            let html = `
+                <div class="agenda-item agenda-header">
+                    <span>Fecha Último Mensaje</span>
+                    <span>Paciente (Teléfono)</span>
+                    <span>Etapa CRM</span>
+                    <span>Estado</span>
+                    <span>Link al Chat</span>
+                </div>
+            `;
+
+            citas.forEach(cita => {
+                const date = new Date(cita.updated_at);
+                const timeStr = date.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+                const dateStr = date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
+
+                const telStr = cita.telefono.replace('+', '');
+                const waLink = "https://wa.me/" + telStr;
+
+                html += `
+                <div class="agenda-item">
+                    <div class="time-badge">${timeStr}<br><span style="font-size:10px;font-family:'DM Sans';color:var(--ink-dark3)">${dateStr}</span></div>
+                    <div class="patient-info">
+                        <span class="patient-name">Lead Autogenerado</span>
+                        <span class="patient-phone">${cita.telefono}</span>
+                    </div>
+                    <div><span class="service-tag" style="text-transform: capitalize;">${cita.etapa.replace(/_/g, ' ')}</span></div>
+                    <div><span class="badge-status status-confirmed">Agenda por IA</span></div>
+                    <div>
+                        <a href="${waLink}" target="_blank" class="action-btn" title="Continuar chat en WhatsApp" style="text-decoration:none; display:inline-block; padding: 8px 12px; font-size:16px;">
+                            <i class="ph ph-whatsapp-logo" style="color: #25D366;"></i>
+                        </a>
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchAgenda);
     </script>
 </body>
 </html>
