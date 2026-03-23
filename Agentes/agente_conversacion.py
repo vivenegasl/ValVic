@@ -30,6 +30,8 @@ import httpx
 import anthropic
 from pydantic import BaseModel
 from fastapi import FastAPI, Request, BackgroundTasks
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from subagente_db import SubagenteDB
 from prompts_ventas import (
@@ -742,7 +744,25 @@ async def listar_conversaciones(activas_only: bool = True):
         """).fetchall()
     return {"conversaciones": [dict(r) for r in rows]}
 
+@app.get("/api/agenda")
+async def api_agenda():
+    """Endpoint temporal para el Panel Web: devuelve las citas (reuniones agendadas)"""
+    with sqlite3.connect(CONV_DB) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute("""
+            SELECT telefono, etapa, updated_at
+            FROM conversaciones
+            WHERE reunion_agendada = 1
+            ORDER BY updated_at DESC LIMIT 50
+        """).fetchall()
+    return {"citas": [dict(r) for r in rows]}
 
+
+# Mapear el Frontend (ValVic Web)
+web_path = Path(__file__).parent.parent / "ValVic Web"
+if web_path.exists():
+    app.mount("/", StaticFiles(directory=str(web_path), html=True), name="web")
+    log.info("Frontend estático montado en la raíz (/) del servidor")
 # ════════════════════════════════════════════════════════════════════════════
 #  MODO SIMULACIÓN
 # ════════════════════════════════════════════════════════════════════════════
