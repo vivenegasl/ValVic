@@ -33,7 +33,7 @@ ON CONFLICT (nombre) DO NOTHING;
 -- Fuentes de ingreso de datos en el reporte
 -- Determina si el dato fue calculado automáticamente o ingresado por el cliente
 CREATE TABLE fuentes_dato (
-  id     smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id     smallint PRIMARY KEY AUTO_INCREMENT,
   nombre text     NOT NULL UNIQUE,
   descripcion text
 );
@@ -46,7 +46,7 @@ INSERT INTO fuentes_dato (nombre, descripcion) VALUES
 
 -- Frecuencias de reporte
 CREATE TABLE frecuencias_reporte (
-  id     smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id     smallint PRIMARY KEY AUTO_INCREMENT,
   nombre text     NOT NULL UNIQUE,
   dias   smallint NOT NULL  -- duración del período en días
 );
@@ -67,16 +67,16 @@ INSERT INTO frecuencias_reporte (nombre, dias) VALUES
 DROP TABLE IF EXISTS reportes CASCADE;
 
 CREATE TABLE reportes (
-  id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at       timestamptz NOT NULL DEFAULT now(),
-  updated_at       timestamptz NOT NULL DEFAULT now(),
+  id               uuid        PRIMARY KEY DEFAULT UUID(),
+  created_at       DATETIME NOT NULL DEFAULT now(),
+  updated_at       DATETIME NOT NULL DEFAULT now(),
   contrato_id      uuid        NOT NULL REFERENCES contratos(id) ON DELETE RESTRICT,
   frecuencia_id    smallint    NOT NULL REFERENCES frecuencias_reporte(id),
   periodo_inicio   date        NOT NULL,
   periodo_fin      date        NOT NULL,
   -- Estado del reporte
-  generado_at      timestamptz,          -- cuándo se calcularon los datos
-  enviado_at       timestamptz,          -- cuándo se envió al cliente
+  generado_at      DATETIME,          -- cuándo se calcularon los datos
+  enviado_at       DATETIME,          -- cuándo se envió al cliente
   aprobado_by      text,                 -- quién lo revisó en ValVic
   -- Análisis IA
   analisis_ia      text,                 -- texto generado por Claude
@@ -433,7 +433,7 @@ CREATE TABLE metricas_spa (
 
 -- Catálogo de métricas custom disponibles por tipo de negocio
 CREATE TABLE catalogo_metricas_custom (
-  id              smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id              smallint PRIMARY KEY AUTO_INCREMENT,
   tipo_negocio_id smallint REFERENCES tipos_negocio(id),  -- NULL = aplica a todos
   clave           text     NOT NULL,
   etiqueta        text     NOT NULL,    -- nombre legible para el cliente
@@ -446,7 +446,7 @@ CREATE TABLE catalogo_metricas_custom (
 
 -- Valores de métricas custom por reporte
 CREATE TABLE metricas_custom (
-  id              uuid     PRIMARY KEY DEFAULT gen_random_uuid(),
+  id              uuid     PRIMARY KEY DEFAULT UUID(),
   reporte_id      uuid     NOT NULL REFERENCES reportes(id) ON DELETE CASCADE,
   metrica_id      smallint NOT NULL REFERENCES catalogo_metricas_custom(id),
   valor_numero    numeric(16,4),
@@ -464,8 +464,8 @@ CREATE TABLE metricas_custom (
 -- ================================================================
 
 CREATE TABLE ingresos_manuales (
-  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at      timestamptz NOT NULL DEFAULT now(),
+  id              uuid        PRIMARY KEY DEFAULT UUID(),
+  created_at      DATETIME NOT NULL DEFAULT now(),
   reporte_id      uuid        NOT NULL REFERENCES reportes(id) ON DELETE CASCADE,
   campo           text        NOT NULL,   -- nombre del campo actualizado
   valor_anterior  text,                   -- para auditoría

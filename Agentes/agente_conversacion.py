@@ -106,7 +106,7 @@ def encolar_mensaje(telefono: str, texto: str):
     Recibe un mensaje entrante y lo encola con debounce adaptativo.
     Cancela el timer existente y crea uno nuevo con la espera correcta.
     """
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     if telefono not in _buffer:
         _buffer[telefono] = {"mensajes": [], "timer": None}
@@ -477,6 +477,7 @@ def generar_respuesta_vicky(
         resp = claude.messages.create(
             model      = "claude-sonnet-4-20250514",
             max_tokens = 350,
+            timeout    = 20,
             system     = [
                 {
                     "type":          "text",

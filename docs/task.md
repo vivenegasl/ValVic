@@ -12,7 +12,7 @@
 
 ## Fase 1B — Bugs Críticos (Backend)
 - [ ] Arreglar `subagente_db.py` — lectura MySQL (métodos async con aiomysql)
-- [ ] Eliminar `config.py` legacy con credenciales hardcodeadas (en `Estructuras/`)
+- [x] Eliminar `config.py` legacy con credenciales hardcodeadas (en `Estructuras/`)
 
 ## Fase 2 — Actualización Web (según PROYECTO.md)
 - [x] Precios web service: implementación=$120
@@ -28,8 +28,8 @@
 - [x] Resolver errores de importación del IDE (fastapi, pydantic, etc.)
 
 ## Fase 4 — Conversión SQL PostgreSQL → MySQL
-- [ ] Convertir `valvic_schema_principal.sql` (gen_random_uuid→UUID, IDENTITY→AUTO_INCREMENT, timestamptz→DATETIME, etc.)
-- [ ] Convertir `valvic_schema_reportes.sql`
+- [x] Convertir `valvic_schema_principal.sql` (gen_random_uuid→UUID, IDENTITY→AUTO_INCREMENT, timestamptz→DATETIME, etc.)
+- [x] Convertir `valvic_schema_reportes.sql`
 
 ## Fase 5 — Infraestructura Oracle (BLOQUEANTE: requiere 2FA con teléfono)
 - [ ] Activar Oracle VM
@@ -50,7 +50,7 @@
 - [ ] Primer lote real: `python prospector.py --vertical dental --ciudad Santiago --cantidad 50`
 - [ ] Migrar `generador.py` de Sheets a MySQL
 - [ ] Migrar `notificaciones.py` de CallMeBot a 360dialog
-- [ ] Mover archivos legacy a carpeta `legacy/` (generador, sheets, notificaciones, main, clientes, config)
+- [x] Mover archivos legacy a carpeta `legacy/` (generador, sheets, notificaciones, main, clientes, config)
 - [ ] Panel web del negocio (`/panel/agenda`, `/panel/horarios`)
 - [ ] Página del paciente (`valvic.cl/cita/TOKEN`)
 - [ ] Integraciones Google My Business + Meta Graph
@@ -59,7 +59,7 @@
 - [ ] Sistema de cobro (Flow/Khipu) integrado en cierre de Vicky
 
 ## Fase 8 — Mejoras Técnicas
-- [ ] Timeout en llamadas Claude API (ya tiene en clasificador, falta en generar_respuesta_vicky)
-- [ ] `asyncio.get_running_loop()` en vez de `get_event_loop()` en `agente_conversacion.py`
+- [x] Timeout en llamadas Claude API (ya tiene en clasificador, falta en generar_respuesta_vicky)
+- [x] `asyncio.get_running_loop()` en vez de `get_event_loop()` en `agente_conversacion.py`
 - [ ] Crear páginas de aterrizaje SEO por vertical (`/clinica-dental`, `/veterinaria`, `/spa`)
-- [ ] Actualizar JSON-LD con `serviceArea` (Santiago, Valparaíso, Concepción)
+- [x] Actualizar JSON-LD con `serviceArea` (Santiago, Valparaíso, Concepción)

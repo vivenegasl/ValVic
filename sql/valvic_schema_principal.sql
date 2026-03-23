@@ -19,7 +19,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- búsqueda de texto
 -- Tipos de negocio (clínica, restaurante, spa, etc.)
 -- Elimina la dependencia transitiva: tabla.tipo → nombre_tipo
 CREATE TABLE tipos_negocio (
-  id     smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id     smallint PRIMARY KEY AUTO_INCREMENT,
   nombre text     NOT NULL UNIQUE,
   icono  text                          -- emoji representativo
 );
@@ -37,7 +37,7 @@ INSERT INTO tipos_negocio (nombre, icono) VALUES
 -- Catálogo de servicios que ofrece ValVic
 -- Elimina: servicios text[] en clientes (viola 1NF y 4NF)
 CREATE TABLE tipos_servicio (
-  id              smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id              smallint PRIMARY KEY AUTO_INCREMENT,
   slug            text     NOT NULL UNIQUE, -- 'citas', 'contenido', etc.
   nombre          text     NOT NULL,
   descripcion     text,
@@ -56,7 +56,7 @@ INSERT INTO tipos_servicio (slug, nombre, descripcion, precio_proyecto, precio_m
 -- Redes sociales disponibles
 -- Elimina: red text en posts (dependencia transitiva)
 CREATE TABLE redes_sociales (
-  id       smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id       smallint PRIMARY KEY AUTO_INCREMENT,
   slug     text     NOT NULL UNIQUE,  -- 'instagram', 'facebook', etc.
   nombre   text     NOT NULL,
   color    text,                      -- hex para UI
@@ -84,7 +84,7 @@ INSERT INTO dias_semana (id, nombre) VALUES
 -- Canales de notificación
 -- Elimina: canal text en notificaciones
 CREATE TABLE canales_notificacion (
-  id     smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id     smallint PRIMARY KEY AUTO_INCREMENT,
   nombre text     NOT NULL UNIQUE   -- 'whatsapp', 'email', 'sms'
 );
 
@@ -100,42 +100,42 @@ INSERT INTO canales_notificacion (nombre) VALUES
 -- ================================================================
 
 CREATE TABLE estados_contacto (
-  id     smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id     smallint PRIMARY KEY AUTO_INCREMENT,
   nombre text     NOT NULL UNIQUE   -- 'nuevo', 'contactado', 'convertido', 'perdido'
 );
 INSERT INTO estados_contacto (nombre) VALUES
   ('nuevo'), ('contactado'), ('en_negociacion'), ('convertido'), ('perdido');
 
 CREATE TABLE estados_cliente (
-  id     smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id     smallint PRIMARY KEY AUTO_INCREMENT,
   nombre text     NOT NULL UNIQUE
 );
 INSERT INTO estados_cliente (nombre) VALUES
   ('activo'), ('pausado'), ('cancelado'), ('moroso');
 
 CREATE TABLE estados_contrato (
-  id     smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id     smallint PRIMARY KEY AUTO_INCREMENT,
   nombre text     NOT NULL UNIQUE
 );
 INSERT INTO estados_contrato (nombre) VALUES
   ('activo'), ('pausado'), ('cancelado'), ('pendiente_pago');
 
 CREATE TABLE estados_post (
-  id     smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id     smallint PRIMARY KEY AUTO_INCREMENT,
   nombre text     NOT NULL UNIQUE
 );
 INSERT INTO estados_post (nombre) VALUES
   ('generado'), ('pendiente_revision'), ('aprobado'), ('publicado'), ('rechazado');
 
 CREATE TABLE estados_cita (
-  id     smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id     smallint PRIMARY KEY AUTO_INCREMENT,
   nombre text     NOT NULL UNIQUE
 );
 INSERT INTO estados_cita (nombre) VALUES
   ('programada'), ('confirmada'), ('completada'), ('cancelada'), ('no_asistio');
 
 CREATE TABLE estados_notificacion (
-  id     smallint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id     smallint PRIMARY KEY AUTO_INCREMENT,
   nombre text     NOT NULL UNIQUE
 );
 INSERT INTO estados_notificacion (nombre) VALUES
@@ -151,9 +151,9 @@ INSERT INTO estados_notificacion (nombre) VALUES
 --       estado_id → FK a estados_contacto
 -- BCNF: la PK determina todos los atributos
 CREATE TABLE contactos (
-  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at      timestamptz NOT NULL DEFAULT now(),
-  updated_at      timestamptz NOT NULL DEFAULT now(),
+  id              uuid        PRIMARY KEY DEFAULT UUID(),
+  created_at      DATETIME NOT NULL DEFAULT now(),
+  updated_at      DATETIME NOT NULL DEFAULT now(),
   nombre          text        NOT NULL CHECK (length(nombre) BETWEEN 2 AND 100),
   negocio         text        CHECK (length(negocio) <= 150),
   contacto        text        NOT NULL CHECK (length(contacto) BETWEEN 5 AND 200),
@@ -173,9 +173,9 @@ CREATE TABLE contactos (
 -- 4NF: datos de contacto en tabla separada (múltiples teléfonos/emails)
 --       servicios en tabla contratos (relación muchos-a-muchos)
 CREATE TABLE clientes (
-  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at      timestamptz NOT NULL DEFAULT now(),
-  updated_at      timestamptz NOT NULL DEFAULT now(),
+  id              uuid        PRIMARY KEY DEFAULT UUID(),
+  created_at      DATETIME NOT NULL DEFAULT now(),
+  updated_at      DATETIME NOT NULL DEFAULT now(),
   nombre_negocio  text        NOT NULL CHECK (length(nombre_negocio) BETWEEN 2 AND 200),
   tipo_id         smallint    REFERENCES tipos_negocio(id) ON UPDATE CASCADE,
   estado_id       smallint    NOT NULL REFERENCES estados_cliente(id) DEFAULT 1,
@@ -198,7 +198,7 @@ ALTER TABLE contactos ADD CONSTRAINT fk_contacto_cliente
 --       Un cliente puede tener múltiples medios de contacto
 --       independientes entre sí.
 CREATE TABLE contactos_cliente (
-  id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  id          uuid        PRIMARY KEY DEFAULT UUID(),
   cliente_id  uuid        NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
   tipo        text        NOT NULL CHECK (tipo IN ('whatsapp', 'email', 'telefono', 'instagram', 'facebook')),
   valor       text        NOT NULL CHECK (length(valor) BETWEEN 4 AND 200),
@@ -229,9 +229,9 @@ CREATE TABLE clientes_redes (
 -- Elimina servicios text[] que violaba 1NF y 4NF.
 -- BCNF: (cliente_id, servicio_id) → todos los demás atributos
 CREATE TABLE contratos (
-  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at      timestamptz NOT NULL DEFAULT now(),
-  updated_at      timestamptz NOT NULL DEFAULT now(),
+  id              uuid        PRIMARY KEY DEFAULT UUID(),
+  created_at      DATETIME NOT NULL DEFAULT now(),
+  updated_at      DATETIME NOT NULL DEFAULT now(),
   cliente_id      uuid        NOT NULL REFERENCES clientes(id) ON DELETE RESTRICT,
   servicio_id     smallint    NOT NULL REFERENCES tipos_servicio(id) ON UPDATE CASCADE,
   estado_id       smallint    NOT NULL REFERENCES estados_contrato(id) DEFAULT 1,
@@ -254,8 +254,8 @@ CREATE TABLE contratos (
 --       estado_id → FK a estados_post
 -- Los hashtags en tabla separada (4NF: multivaluados independientes)
 CREATE TABLE posts (
-  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at      timestamptz NOT NULL DEFAULT now(),
+  id              uuid        PRIMARY KEY DEFAULT UUID(),
+  created_at      DATETIME NOT NULL DEFAULT now(),
   contrato_id     uuid        NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
   red_id          smallint    NOT NULL REFERENCES redes_sociales(id) ON UPDATE CASCADE,
   dia_id          smallint    REFERENCES dias_semana(id) ON UPDATE CASCADE,
@@ -263,7 +263,7 @@ CREATE TABLE posts (
   emoji           text,
   texto           text        NOT NULL CHECK (length(texto) BETWEEN 10 AND 3000),
   estado_id       smallint    NOT NULL REFERENCES estados_post(id) DEFAULT 2,
-  publicado_at    timestamptz,
+  publicado_at    DATETIME,
   semana_numero   smallint,   -- número de semana del año para agrupar
   ano             smallint    -- año para agrupar
 );
@@ -286,8 +286,8 @@ CREATE TABLE posts_hashtags (
 -- 3NF: separado de citas porque un paciente tiene múltiples citas
 --       sus datos no dependen de ninguna cita específica
 CREATE TABLE pacientes (
-  id              uuid  PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at      timestamptz NOT NULL DEFAULT now(),
+  id              uuid  PRIMARY KEY DEFAULT UUID(),
+  created_at      DATETIME NOT NULL DEFAULT now(),
   cliente_id      uuid  NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
   nombre          text  NOT NULL CHECK (length(nombre) BETWEEN 2 AND 150),
   telefono        text  CHECK (length(telefono) BETWEEN 5 AND 30),
@@ -301,9 +301,9 @@ CREATE TABLE pacientes (
 --       estado_id → FK a estados_cita
 -- BCNF: id determina todos los atributos
 CREATE TABLE citas (
-  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at      timestamptz NOT NULL DEFAULT now(),
-  updated_at      timestamptz NOT NULL DEFAULT now(),
+  id              uuid        PRIMARY KEY DEFAULT UUID(),
+  created_at      DATETIME NOT NULL DEFAULT now(),
+  updated_at      DATETIME NOT NULL DEFAULT now(),
   contrato_id     uuid        NOT NULL REFERENCES contratos(id) ON DELETE RESTRICT,
   paciente_id     uuid        NOT NULL REFERENCES pacientes(id) ON DELETE RESTRICT,
   fecha           date        NOT NULL,
@@ -320,14 +320,14 @@ CREATE TABLE citas (
 -- 3NF: cita_id + canal_id como FKs (no transitivas)
 -- Historial auditable de cada recordatorio
 CREATE TABLE recordatorios (
-  id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at  timestamptz NOT NULL DEFAULT now(),
+  id          uuid        PRIMARY KEY DEFAULT UUID(),
+  created_at  DATETIME NOT NULL DEFAULT now(),
   cita_id     uuid        NOT NULL REFERENCES citas(id) ON DELETE CASCADE,
   canal_id    smallint    NOT NULL REFERENCES canales_notificacion(id),
   tipo        text        NOT NULL CHECK (tipo IN ('24h', '1h', 'confirmacion', 'cancelacion')),
   mensaje     text        NOT NULL,
   estado_id   smallint    NOT NULL REFERENCES estados_notificacion(id) DEFAULT 1,
-  enviado_at  timestamptz,
+  enviado_at  DATETIME,
   error_msg   text,
   UNIQUE (cita_id, canal_id, tipo)  -- no enviar el mismo recordatorio dos veces
 );
@@ -338,8 +338,8 @@ CREATE TABLE recordatorios (
 -- ================================================================
 
 CREATE TABLE reportes (
-  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at      timestamptz NOT NULL DEFAULT now(),
+  id              uuid        PRIMARY KEY DEFAULT UUID(),
+  created_at      DATETIME NOT NULL DEFAULT now(),
   contrato_id     uuid        NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
   periodo_inicio  date        NOT NULL,
   periodo_fin     date        NOT NULL,
@@ -350,7 +350,7 @@ CREATE TABLE reportes (
   total_posts     smallint,
   posts_publicados  smallint,
   analisis_ia     text,       -- texto generado por Claude
-  enviado_at      timestamptz,
+  enviado_at      DATETIME,
   -- Constraint: un reporte por período por contrato
   UNIQUE (contrato_id, periodo_inicio, periodo_fin),
   CHECK (periodo_fin > periodo_inicio)
@@ -363,8 +363,8 @@ CREATE TABLE reportes (
 -- ================================================================
 
 CREATE TABLE notificaciones (
-  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at      timestamptz NOT NULL DEFAULT now(),
+  id              uuid        PRIMARY KEY DEFAULT UUID(),
+  created_at      DATETIME NOT NULL DEFAULT now(),
   -- A quién va (puede ser cliente de ValVic o paciente de un cliente)
   destinatario_tipo text      NOT NULL CHECK (destinatario_tipo IN ('cliente', 'paciente', 'lead')),
   destinatario_id uuid        NOT NULL,  -- FK polimórfica (no se puede FK directo)
@@ -372,7 +372,7 @@ CREATE TABLE notificaciones (
   asunto          text,
   mensaje         text        NOT NULL,
   estado_id       smallint    NOT NULL REFERENCES estados_notificacion(id) DEFAULT 1,
-  enviado_at      timestamptz,
+  enviado_at      DATETIME,
   error_msg       text,
   -- Referencia al origen de la notificación
   origen_tipo     text        CHECK (origen_tipo IN ('cita', 'post', 'reporte', 'manual')),
