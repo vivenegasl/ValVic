@@ -1,4 +1,7 @@
 # ValVic — Constitución Técnica y Arquitectura
+> [!IMPORTANT]
+> **REGLA DE MEMORIA VIVA:** Al inicio de cada sesión, el agente DEBE leer `/.agent/brain/`. Al finalizar cada hito o antes de terminar la sesión, el agente DEBE actualizar proactivamente el Master Brain (`ESTADO_ACTUAL.md`, `ARQUITECTURA.md`).
+
 > Archivo de referencia OBLIGATORIO para Claude y otras IAs.
 > Última actualización: Marzo 2026.
 

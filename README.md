@@ -1,4 +1,8 @@
 # ValVic — Repositorio Principal
+
+> [!IMPORTANT]
+> **REGLA DE MEMORIA VIVA (MANDATORIA):** Al inicio de cada sesión comercial o técnica, el agente DEBE leer la carpeta `/.agent/brain/`. Al finalizar cada hito o antes de terminar la sesión, el agente DEBE actualizar proactivamente `ESTADO_ACTUAL.md` y `ARQUITECTURA.md` basándose en el trabajo realizado. Esto garantiza la persistencia del contexto senior de ValVic.
+
 Sistema multi-agente en Python puro y FastAPI para automatizar la prospección, negociación y agendamiento de negocios de servicios en Chile a través de WhatsApp.
 
 ## CÓMO EJECUTAR EL PROSPECTOR 
