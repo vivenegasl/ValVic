@@ -68,6 +68,11 @@
 - [ ] Sistema de cobro (Flow/Khipu) integrado en flujo de Vicky.
 - [ ] Agente de seguimiento (2do mensaje autónomo a los 3 días).
 
+## Fase 10 — Onboarding Automatizado (Scalability)
+- [ ] Implementar flujo de **Meta Embedded Signup** en el Panel.
+- [ ] Backend para gestión de múltiples `PhoneID` por cliente.
+- [ ] Dashboard de consumo de mensajes (cuota gratuita Meta).
+
 ## Fase 8 — Mejoras Técnicas
 - [x] Timeout en llamadas Claude API (ya tiene en clasificador, falta en generar_respuesta_vicky)
 - [x] `asyncio.get_running_loop()` en vez de `get_event_loop()` en `agente_conversacion.py`

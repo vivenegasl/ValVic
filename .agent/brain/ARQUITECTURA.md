@@ -33,6 +33,7 @@ Mapa rápido para entender la ubicación de los archivos y la lógica del sistem
 - **360dialog:** Canal oficial BSP para la API de WhatsApp Business.
 
 ## 🔗 Flujos Técnicos
-1. **Petición Cliente:** Entra por `360dialog` -> Procesa en `FastAPI` (Oracle) -> Responde vía `Claude`.
-2. **Dashboard UI:** El usuario accede a `/panel/login.html` -> Valida credenciales -> Carga `agenda.html` inyectando datos corporativos desde MySQL.
-3. **Estilo:** Carga dinámica de variables CSS en el `:root` de `panel.css` permite cambios de tema instantáneos (ej: de Azul a Esmeralda).
+1. **Petición Cliente:** Entra por `360dialog`/`Meta API` -> Procesa en `FastAPI` (Oracle) -> Responde vía `Claude`.
+2. **Dashboard UI:** El usuario accede a `/panel/login.html` -> Valida credenciales -> Carga `agenda.html`.
+3. **Onboarding:** El cliente vincula su número vía **Meta Embedded Signup** -> ValVic recibe `PhoneID` -> El sistema gestiona múltiples instancias de Vicky.
+4. **Estilo:** Carga dinámica de variables CSS en el `:root` de `panel.css`.

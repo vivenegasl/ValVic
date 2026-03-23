@@ -6,10 +6,9 @@ Este documento registra los hitos más recientes y las tareas pendientes para qu
 - **Unificación de Marca:** Se cambió globalmente de "Val Vic" a "**ValVic**".
 - **Identidad Visual:** Transición completa a la temática **Esmeralda Premium** con acentos **Rubí**.
 - **Logotipos:** Implementación de `favicon-180-transparent.png` en toda la web para evitar fondos blancos.
-- **Interacción Landing (`index.html`):** 
-  - Luz de seguimiento (`cursor-glow`) reactiva: **Esmeralda** en oscuros, **Rubí** en claros.
-  - Corrección de `smooth-scroll` en el menú superior.
-- **Seguridad y Estructura:** Refactorización del Panel para separar CSS y JS externos, cumpliendo con CSP.
+- **Luz de seguimiento (`cursor-glow`) reactiva:** Esmeralda en oscuros, Rubí en claros.
+- **Estrategia de Onboarding:** Definición del modelo "Embedded Signup" para escalabilidad de clientes finales.
+- **Seguridad y Estructura:** Refactorización del Panel para separar CSS y JS externos.
 - **Base de Datos:** Conversión exitosa de esquemas PostgreSQL a **MySQL HeatWave**.
 
 ## 🛠️ Tareas Pendientes e Ideas
