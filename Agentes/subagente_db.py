@@ -560,6 +560,50 @@ class SubagenteDB:
         conteo = self.contar_por_estado()
         return sum(conteo.values())
 
+    async def obtener_por_estado_async(self, estado: str, limite: int = 100) -> list[dict]:
+        if self.backend == "mysql":
+            import asyncio
+            resultado = await _mysql_obtener(estado, limite)
+        else:
+            resultado = _sqlite_obtener(estado, limite)
+        return resultado.datos or []
+
+    async def obtener_no_contactados_async(self, limite: int = 30) -> list[dict]:
+        if self.backend == "mysql":
+            import asyncio
+            resultado = await _mysql_no_contactados(limite)
+        else:
+            resultado = _sqlite_no_contactados(limite)
+        return resultado.datos or []
+
+    async def contar_por_estado_async(self) -> dict[str, int]:
+        if self.backend == "mysql":
+            import asyncio
+            resultado = await _mysql_contar()
+        else:
+            resultado = _sqlite_contar()
+        if not resultado.datos:
+            return {}
+        return {r["estado"]: r["total"] for r in resultado.datos}
+
+    async def existe_async(self, nombre: str, ciudad: str) -> bool:
+        if self.backend == "mysql":
+            import asyncio
+            return await _mysql_existe(nombre, ciudad)
+        return _sqlite_existe(nombre, ciudad)
+
+    async def marcar_contactado_async(self, id: int) -> ResultadoDB:
+        return await self.actualizar_async(id, {
+            "estado":     "contactado",
+            "enviado_at": datetime.now().isoformat(),
+        })
+
+    async def marcar_descartado_async(self, id: int, razon: str = "") -> ResultadoDB:
+        return await self.actualizar_async(id, {
+            "estado":   "descartado",
+            "razon_ia": razon,
+        })
+
     # ── Diagnóstico ──────────────────────────────────────────────────────────
 
     def resumen(self) -> str:
@@ -644,8 +688,19 @@ def _resumen_vertical(self, vertical: str) -> str:
     lineas.append(f"  {'TOTAL':<22}{'':>26} {total}")
     return "\n".join(lineas)
 
+async def _obtener_por_estado_vertical_async(self, estado: str, vertical: str, limite: int = 100) -> list[dict]:
+    # En SQLite esto es sincrónico pero rápido, se wrappea en asíncrono.
+    resultado = _sqlite_obtener_vertical(estado, vertical, limite)
+    return resultado.datos or []
+
+async def _obtener_no_contactados_vertical_async(self, vertical: str, limite: int = 30) -> list[dict]:
+    resultado = _sqlite_no_contactados_vertical(vertical, limite)
+    return resultado.datos or []
+
 # Agregar métodos a la clase dinámicamente
 import types
-SubagenteDB.obtener_por_estado_vertical     = _obtener_por_estado_vertical
-SubagenteDB.obtener_no_contactados_vertical = _obtener_no_contactados_vertical
-SubagenteDB.resumen_vertical                = _resumen_vertical
+SubagenteDB.obtener_por_estado_vertical           = _obtener_por_estado_vertical
+SubagenteDB.obtener_por_estado_vertical_async     = _obtener_por_estado_vertical_async
+SubagenteDB.obtener_no_contactados_vertical       = _obtener_no_contactados_vertical
+SubagenteDB.obtener_no_contactados_vertical_async = _obtener_no_contactados_vertical_async
+SubagenteDB.resumen_vertical                      = _resumen_vertical

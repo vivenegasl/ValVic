@@ -579,11 +579,11 @@ async def orquestar(cfg: dict, ciudad: str, cantidad: int, modo_test: bool, envi
         return
 
     # FASE 2: Guardar en DB
-    res = db.guardar_masivo(negocios)
+    res = await db.guardar_masivo_async(negocios)
     print(f"  Guardados: {res.afectados} nuevos ({len(negocios) - res.afectados} ya existían)\n")
 
     # FASE 3: Calificar en paralelo
-    nuevos = db.obtener_por_estado_vertical("nuevo", cfg["id"], cantidad)
+    nuevos = await db.obtener_por_estado_vertical_async("nuevo", cfg["id"], cantidad)
     if nuevos:
         print(f"{'─' * 56}")
         print(f"  FASE 2 — Calificando {len(nuevos)} prospectos (paralelo, Haiku)...")
@@ -595,7 +595,7 @@ async def orquestar(cfg: dict, ciudad: str, cantidad: int, modo_test: bool, envi
         print(f"\n  Listos: {listos} | Sin teléfono: {sin_tel} | Descartados: {descartados}")
 
     # FASE 4: Envío
-    listos_db = db.obtener_no_contactados_vertical(cfg["id"], MAX_ENVIOS_DIA)
+    listos_db = await db.obtener_no_contactados_vertical_async(cfg["id"], MAX_ENVIOS_DIA)
     print(f"\n{'─' * 56}")
     print(f"  FASE 3 — Envío")
     print(f"  Con teléfono, listos: {len(listos_db)}")
@@ -614,7 +614,7 @@ async def orquestar(cfg: dict, ciudad: str, cantidad: int, modo_test: bool, envi
             for p in listos_db[:MAX_ENVIOS_DIA]:
                 res_e = procesar_envio(p, modo_test=False)
                 if res_e["ok"]:
-                    db.marcar_contactado(p["id"])
+                    await db.marcar_contactado_async(p["id"])
                     enviados += 1
                     print(f"  [{res_e['metodo']}] {p['nombre_negocio']}")
                 time.sleep(PAUSA_ENVIO)

@@ -11,7 +11,7 @@
 - [x] Corregir CSP en `.htaccess` — quitar `'unsafe-inline'` scripts
 
 ## Fase 1B — Bugs Críticos (Backend)
-- [ ] Arreglar `subagente_db.py` — lectura MySQL (métodos async con aiomysql)
+- [x] Arreglar `subagente_db.py` — lectura MySQL (métodos async con aiomysql)
 - [x] Eliminar `config.py` legacy con credenciales hardcodeadas (en `Estructuras/`)
 
 ## Fase 2 — Actualización Web (según PROYECTO.md)
