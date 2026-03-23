@@ -1,0 +1,83 @@
+# ================================================================
+#  ValVic — .htaccess
+#  Seguridad, rendimiento y redirecciones para Hostinger
+# ================================================================
+
+# ── Habilitar mod_headers ─────────────────────────────────────
+<IfModule mod_headers.c>
+
+  # Content Security Policy
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://wa.me https://api.whatsapp.com; frame-ancestors 'none';"
+
+  # Evita que el navegador adivine el tipo de archivo
+  Header set X-Content-Type-Options "nosniff"
+
+  # Evita que el sitio sea embebido en iframes de otros dominios
+  Header set X-Frame-Options "SAMEORIGIN"
+
+  # Controla qué información se envía al hacer click en links externos
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Desactiva funciones del navegador que no usas
+  Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+
+  # Fuerza HTTPS (descomenta cuando tengas SSL activo)
+  # Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+</IfModule>
+
+# ── Redirigir www → sin www (elige uno y comenta el otro) ─────
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Redirigir www.valvic.cl → valvic.cl
+  RewriteCond %{HTTP_HOST} ^www\.valvic\.cl [NC]
+  RewriteRule ^(.*)$ https://valvic.cl/$1 [R=301,L]
+
+  # Forzar HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+</IfModule>
+
+# ── Cache de archivos estáticos ───────────────────────────────
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # Imágenes — 1 mes
+  ExpiresByType image/png             "access plus 1 month"
+  ExpiresByType image/jpeg            "access plus 1 month"
+  ExpiresByType image/gif             "access plus 1 month"
+  ExpiresByType image/svg+xml         "access plus 1 month"
+  ExpiresByType image/x-icon          "access plus 1 month"
+  ExpiresByType image/vnd.microsoft.icon "access plus 1 month"
+
+  # Fonts — 1 año
+  ExpiresByType font/woff2            "access plus 1 year"
+  ExpiresByType font/woff             "access plus 1 year"
+
+  # CSS y JS — 1 semana
+  ExpiresByType text/css              "access plus 1 week"
+  ExpiresByType application/javascript "access plus 1 week"
+
+  # HTML — sin cache (siempre fresco)
+  ExpiresByType text/html             "access plus 0 seconds"
+</IfModule>
+
+# ── Comprimir respuestas (mejora velocidad) ───────────────────
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript
+  AddOutputFilterByType DEFLATE image/svg+xml application/json
+</IfModule>
+
+# ── Ocultar información del servidor ─────────────────────────
+ServerSignature Off
+
+# ── Bloquear acceso a archivos sensibles ─────────────────────
+<FilesMatch "\.(htaccess|htpasswd|env|log|sh|sql|json)$">
+  Order Allow,Deny
+  Deny from all
+</FilesMatch>
+
+# ── Página de error personalizada (opcional) ──────────────────
+# ErrorDocument 404 /index.html

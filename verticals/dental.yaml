@@ -1,0 +1,126 @@
+# ================================================================
+#  ValVic — Vertical: Clínicas Dentales
+#  Agente: Daniela
+# ================================================================
+
+id: dental
+nombre_rubro: Clínicas Dentales
+agente_nombre: Daniela
+producto_principal: citas   # citas | web | bundle
+
+# ── Búsqueda en Google Places ──────────────────────────────────
+busqueda:
+  queries:
+    - "clínica dental"
+    - "dentista"
+    - "odontología"
+    - "consultorio dental"
+    - "ortodoncia"
+  zonas_default:
+    santiago:
+      - "Santiago centro"
+      - "Providencia"
+      - "Las Condes"
+      - "Ñuñoa"
+      - "Maipú"
+      - "La Florida"
+      - "San Bernardo"
+      - "Vitacura"
+      - "Lo Barnechea"
+      - "Pudahuel"
+    valparaiso:
+      - "Valparaíso"
+      - "Viña del Mar"
+      - "Quilpué"
+      - "Villa Alemana"
+    concepcion:
+      - "Concepción"
+      - "Talcahuano"
+      - "San Pedro de la Paz"
+
+# ── Problema y pitch ───────────────────────────────────────────
+problema:
+  descripcion: "citas sin confirmar que quedan vacías el día de atención"
+  gancho_economico: "Cada cita vacía son $120-250 USD perdidos para la clínica"
+  pregunta_opener: "¿Les pasa que hay citas sin confirmar que quedan vacías el mismo día?"
+  datos_industria: "Las clínicas dentales pierden en promedio 3-5 citas por semana por inasistencia"
+
+# Observación según volumen de reseñas (para el opener)
+observaciones_por_volumen:
+  alto: "Con ese volumen de pacientes, imagino que tienen horas llenas la mayor parte del tiempo"
+  medio: "Tienen buena reputación establecida en la zona"
+  bajo: "Vi que están creciendo en la zona"
+  umbral_alto: 80   # reseñas
+  umbral_medio: 25
+
+# ── Objeciones y respuestas ───────────────────────────────────
+objeciones:
+  ya_tienen_sistema: "¿Ese sistema les recuerda las citas automáticamente por WhatsApp a los pacientes?"
+  muy_caro: "¿Cuántas citas vacías tienen por semana? Con dos citas recuperadas al mes ya cubre el costo."
+  somos_pequenos: "Para clínicas pequeñas es donde más cambia — sin contratar recepcionista extra."
+  no_tengo_tiempo: "¿Cuándo te viene bien? Le puedo pedir a Daniela que te llame esta semana."
+  lo_pienso: "Claro. ¿Qué es lo que quieres pensar? A veces puedo resolverlo ahora."
+  ya_tienen_recepcionista: "¿La recepcionista puede responder WhatsApp mientras atiende en persona?"
+
+# ── Tono y personalidad ───────────────────────────────────────
+tono: "profesional y cercano"
+contexto_tono: >
+  Hablas con dueños de clínicas o dentistas dueños de su consultorio.
+  Son profesionales de la salud, no comerciantes. El tono debe ser
+  respetuoso y basado en datos, no en urgencia artificial.
+  Evitar palabras como "potenciar", "impulsar", "robustecer".
+
+# ── Precios ───────────────────────────────────────────────────
+# Benchmark mercado: Nexden $20 USD, AgendaPro dental $29-80 USD
+# ValVic: premium por implementación + WhatsApp nativo + web
+precios:
+  # Agente de citas solo
+  citas_mensual_lista:  90    # USD/mes — precio de lista
+  citas_mensual_piso:   70    # USD/mes — mínimo sin escalar
+  citas_impl_lista:    100    # USD pago único
+  citas_impl_piso:      90    # mínimo sin escalar
+
+  # Sitio web solo
+  web_mensual_lista:    50
+  web_mensual_piso:     40
+  web_impl_lista:      100
+  web_impl_piso:        90
+
+  # Bundle citas + web (oferta principal)
+  bundle_mensual_lista: 130
+  bundle_mensual_piso:   80   # piso absoluto para bundle
+  bundle_impl_lista:    180
+  bundle_impl_piso:     160
+
+  # Señal de inicio (pago para confirmar)
+  senal_impl: 50   # mitad de la implementación
+
+# ── Escalera de concesiones (en orden) ────────────────────────
+concesiones:
+  - id: descuento_impl_10
+    texto: "Te hago el 10% en la implementación, queda en $90."
+    activar_si: primera_objecion_precio
+
+  - id: pago_mitad_mitad
+    texto: "Lo dividimos: $50 para empezar y el resto cuando estemos funcionando."
+    activar_si: objecion_flujo_caja
+
+  - id: descuento_mensual_3meses
+    texto: "Los primeros 3 meses te los dejo a $75/mes, después precio normal."
+    activar_si: segunda_objecion_precio
+
+  - id: primer_mes_gratis
+    texto: "Te dejo el primer mes sin costo para que compruebes los resultados."
+    activar_si: ultima_instancia
+
+# ── Detección de web ──────────────────────────────────────────
+deteccion_web:
+  sin_web:
+    pitch: "Vi que no tienen sitio web todavía. Hoy eso significa perder pacientes que buscan en Google antes de llamar."
+    producto_sugerido: bundle
+  web_basica:
+    pitch: "Tienen web pero sin SSL ni SEO básico — eso les hace perder posiciones en Google."
+    producto_sugerido: bundle
+  web_buena:
+    pitch: null   # no mencionar la web, ir directo a citas
+    producto_sugerido: citas

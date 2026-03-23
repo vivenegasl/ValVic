@@ -1,0 +1,9 @@
+# ValVic Project AI Rules
+
+CRITICAL INSTRUCTION FOR ALL AI ASSISTANTS:
+Before proposing any architectural change, suggesting a library, or writing any code, you MUST review the project guidelines defined in:
+`c:\Users\vlind\Desktop\Valvic\docs\PROYECTO.md`
+
+If a solution violates any rule in the 'REGLAS CRÍTICAS' or 'DECISIONES DE ARQUITECTURA' sections (e.g., using Node.js instead of Python, React instead of Vanilla JS, Supabase instead of MySQL, or adding unwanted frameworks like LangChain), you MUST reject the user's request and offer an alternative that complies with the document.
+
+If something is not explicitly covered in the document, or if the user asks you to write logic that contradicts the sales/prospecting architecture (like breaking the multi-vertical agent mapping), you MUST ask the user for clarification before executing code changes.

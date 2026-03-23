@@ -1,0 +1,27 @@
+# Python / Entorno
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# Variables de entorno y credenciales (CRÍTICO)
+.env
+google_credentials.json
+*.pem
+*.key
+*.cert
+
+# Bases de datos locales
+*.db
+*.sqlite
+*.sqlite3
+prospectos_vet.db
+conversaciones.db
+
+# Logs y SO
+*.log
+.DS_Store
+Thumbs.db
