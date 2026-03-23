@@ -49,9 +49,9 @@
                      || Math.hypot(b.x - mouse.x, b.y - mouse.y) < 140;
           const alpha = (1 - d / CONN) * (near ? 0.65 : 0.2);
           const g     = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-          g.addColorStop(0,   `rgba(75,121,255,${alpha})`);
-          g.addColorStop(0.5, `rgba(123,159,255,${alpha * 0.5})`);
-          g.addColorStop(1,   `rgba(75,121,255,${alpha})`);
+          g.addColorStop(0,   `rgba(16,185,129,${alpha})`);
+          g.addColorStop(0.5, `rgba(52,211,153,${alpha * 0.5})`);
+          g.addColorStop(1,   `rgba(16,185,129,${alpha})`);
           ctx.beginPath();
           ctx.strokeStyle = g;
           ctx.lineWidth   = near ? 1.3 : 0.65;
@@ -72,9 +72,9 @@
       const gr     = r * (near ? 6 : n.isHub ? 5 : 3.5);
 
       const grd = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, gr);
-      grd.addColorStop(0,    `rgba(75,121,255,${bright * 0.45})`);
-      grd.addColorStop(0.35, `rgba(75,121,255,${bright * 0.15})`);
-      grd.addColorStop(1,    "rgba(75,121,255,0)");
+      grd.addColorStop(0,    `rgba(16,185,129,${bright * 0.45})`);
+      grd.addColorStop(0.35, `rgba(16,185,129,${bright * 0.15})`);
+      grd.addColorStop(1,    "rgba(16,185,129,0)");
       ctx.beginPath();
       ctx.arc(n.x, n.y, gr, 0, Math.PI * 2);
       ctx.fillStyle = grd;
@@ -83,8 +83,8 @@
       ctx.beginPath();
       ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
       ctx.fillStyle = near
-        ? `rgba(140,180,255,${bright})`
-        : `rgba(75,121,255,${bright})`;
+        ? `rgba(110,231,183,${bright})`
+        : `rgba(16,185,129,${bright})`;
       ctx.fill();
 
       if (n.isHub || near) {

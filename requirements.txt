@@ -23,3 +23,7 @@ PyMySQL>=1.1.0          # para migraciones síncronas y setup inicial
 
 # ── Utilidades ─────────────────────────────────────────────────
 python-dateutil>=2.9.0
+
+# ── Autenticación JWT (panel CRM) ───────────────────────────────
+passlib[bcrypt]>=1.7.4
+PyJWT>=2.8.0

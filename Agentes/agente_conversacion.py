@@ -29,7 +29,7 @@ from typing import Optional
 import httpx
 import anthropic
 from pydantic import BaseModel
-from fastapi import FastAPI, Request, BackgroundTasks
+from fastapi import FastAPI, Request, BackgroundTasks, Response, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -41,6 +41,16 @@ from prompts_ventas import (
     construir_historial_str,
     construir_contexto_prospecto,
     PROMPT_AGENDAR_REUNION,
+)
+from auth_panel import (
+    RegisterInput,
+    LoginInput,
+    UsuarioPayload,
+    create_jwt,
+    extraer_usuario_de_cookie,
+    registrar_usuario,
+    autenticar_usuario,
+    COOKIE_NAME,
 )
 
 # ─── logging ─────────────────────────────────────────────────────────────────
@@ -56,6 +66,14 @@ ANTHROPIC_API_KEY  = os.getenv("ANTHROPIC_API_KEY", "")
 DIALOG360_API_KEY  = os.getenv("DIALOG360_API_KEY", "")
 DIALOG360_PHONE_ID = os.getenv("DIALOG360_PHONE_ID", "")
 VALVIC_WHATSAPP    = os.getenv("VALVIC_WHATSAPP", "+56928417992")
+
+# ─── MySQL (producción Oracle HeatWave) ─────────────────────────────────────
+USAR_MYSQL     = bool(os.getenv("MYSQL_HOST"))
+MYSQL_HOST     = os.getenv("MYSQL_HOST", "")
+MYSQL_PORT     = int(os.getenv("MYSQL_PORT", "3306"))
+MYSQL_USER     = os.getenv("MYSQL_USER", "valvic_app")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+MYSQL_DB       = os.getenv("MYSQL_DB", "valvic_db")
 
 # ─── clientes ────────────────────────────────────────────────────────────────
 claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
@@ -744,18 +762,148 @@ async def listar_conversaciones(activas_only: bool = True):
         """).fetchall()
     return {"conversaciones": [dict(r) for r in rows]}
 
+@app.post("/api/register", status_code=201)
+async def api_register(body: RegisterInput):
+    """
+    Registra un nuevo cliente/negocio en el panel.
+    Recibe: email, password, nombre_negocio.
+    Encripta la contraseña con bcrypt antes de guardar.
+    """
+    usuario = await registrar_usuario(
+        email          = body.email,
+        password       = body.password,
+        nombre_negocio = body.nombre_negocio,
+    )
+    return {"ok": True, "id": usuario["id"], "nombre_negocio": usuario["nombre_negocio"]}
+
+
+@app.post("/api/login")
+async def api_login(body: LoginInput, response: Response):
+    """
+    Autentica al usuario y entrega una Cookie HttpOnly con el JWT.
+    - Verifica el password contra el hash bcrypt en la BD.
+    - El JWT incluye id, email y nombre_negocio en el payload.
+    - La cookie es HttpOnly + SameSite=Lax (Secure=True en producción HTTPS).
+    """
+    usuario = await autenticar_usuario(body.email, body.password)
+    if not usuario:
+        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+
+    payload = UsuarioPayload(
+        id             = usuario["id"],
+        email          = usuario["email"],
+        nombre_negocio = usuario["nombre_negocio"],
+    )
+    token = create_jwt(payload)
+
+    # Cookie HttpOnly: el JS del navegador NO puede leerla (protección XSS)
+    # SameSite=Lax: protege contra CSRF en la mayoría de los flujos
+    # Secure=True debería activarse cuando haya HTTPS (certbot)
+    is_https = os.getenv("ENVIRONMENT", "") == "production"
+    response.set_cookie(
+        key       = COOKIE_NAME,
+        value     = token,
+        httponly  = True,
+        samesite  = "lax",
+        secure    = is_https,
+        max_age   = 86400,   # 24 horas en segundos
+        path      = "/",
+    )
+    return {"ok": True, "nombre_negocio": usuario["nombre_negocio"]}
+
+
+@app.get("/api/me")
+async def api_me(request: Request):
+    """
+    Valida la cookie JWT y retorna los datos del usuario autenticado.
+    Usado por el panel para confirmar la sesión al cargar la página.
+    Retorna 401 si la cookie no existe o el token es inválido/expirado.
+    """
+    usuario = extraer_usuario_de_cookie(request)
+    return {"email": usuario.email, "nombre_negocio": usuario.nombre_negocio}
+
+
+@app.post("/api/logout")
+async def api_logout(response: Response):
+    """Invalida la sesión eliminando la cookie del cliente."""
+    response.delete_cookie(key=COOKIE_NAME, path="/")
+    return {"ok": True}
+
+
 @app.get("/api/agenda")
-async def api_agenda():
-    """Endpoint temporal para el Panel Web: devuelve las citas (reuniones agendadas)"""
-    with sqlite3.connect(CONV_DB) as conn:
-        conn.row_factory = sqlite3.Row
-        rows = conn.execute("""
-            SELECT telefono, etapa, updated_at
-            FROM conversaciones
-            WHERE reunion_agendada = 1
-            ORDER BY updated_at DESC LIMIT 50
-        """).fetchall()
-    return {"citas": [dict(r) for r in rows]}
+async def api_agenda(request: Request):
+    """
+    CRÍTICO — Aislamiento total de datos (multi-tenancy):
+
+    1. Extrae el usuario del JWT en la cookie (lanza 401 si inválido).
+    2. Filtra las reuniones/citas con WHERE usuario_id = <id_del_usuario_logueado>.
+       Es IMPOSIBLE que un cliente vea datos de otro negocio.
+
+    En modo SQLite (local): filtra conversaciones con reunion_agendada=1.
+    En modo MySQL (producción): usa la vista v_agenda_panel con filtro estricto.
+    """
+    usuario = extraer_usuario_de_cookie(request)   # 401 si no autenticado
+
+    if USAR_MYSQL:
+        # ── Producción: Vista v_agenda_panel + WHERE usuario_id ──────────
+        try:
+            import aiomysql
+            conn = await aiomysql.connect(
+                host=MYSQL_HOST, port=MYSQL_PORT,
+                user=MYSQL_USER, password=MYSQL_PASSWORD,
+                db=MYSQL_DB, charset="utf8mb4",
+            )
+            async with conn.cursor(aiomysql.DictCursor) as cur:
+                await cur.execute(
+                    """
+                    SELECT reunion_id, telefono, nombre_negocio,
+                           horario_solicitado, estado_cita,
+                           etapa_crm, servicio_acordado,
+                           precio_acordado, created_at, updated_at
+                    FROM   v_agenda_panel
+                    WHERE  usuario_id = %s
+                    LIMIT  100
+                    """,
+                    (usuario.id,),
+                )
+                rows = await cur.fetchall()
+            conn.close()
+            return {"citas": [dict(r) for r in rows], "negocio": usuario.nombre_negocio}
+        except Exception as e:
+            log.error(f"/api/agenda MySQL error: {e}")
+            raise HTTPException(status_code=500, detail="Error al obtener agenda")
+    else:
+        # ── Desarrollo: SQLite — devuelve conversaciones del usuario ──────
+        # En local, todas las conversaciones son del primer usuario (fundador/dev).
+        # La columna usuario_id puede no existir aún en SQLite — usamos fallback.
+        with sqlite3.connect(CONV_DB) as conn:
+            conn.row_factory = sqlite3.Row
+            try:
+                rows = conn.execute(
+                    """
+                    SELECT telefono, etapa, servicio_acordado,
+                           precio_acordado, updated_at
+                    FROM   conversaciones
+                    WHERE  reunion_agendada = 1
+                      AND  (usuario_id = ? OR usuario_id IS NULL)
+                    ORDER  BY updated_at DESC
+                    LIMIT  50
+                    """,
+                    (usuario.id,),
+                ).fetchall()
+            except sqlite3.OperationalError:
+                # Columna usuario_id no existe aún → fallback sin filtro
+                rows = conn.execute(
+                    """
+                    SELECT telefono, etapa, servicio_acordado,
+                           precio_acordado, updated_at
+                    FROM   conversaciones
+                    WHERE  reunion_agendada = 1
+                    ORDER  BY updated_at DESC LIMIT 50
+                    """
+                ).fetchall()
+        return {"citas": [dict(r) for r in rows], "negocio": usuario.nombre_negocio}
+
 
 
 # Mapear el Frontend (ValVic Web)

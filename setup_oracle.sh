@@ -1,6 +1,6 @@
-#!/bin/bash
+﻿#!/bin/bash
 # ================================================================
-#  ValVic — Setup automatizado en Oracle VM
+#  ValVic â€” Setup automatizado en Oracle VM
 #  Ejecutar UNA SOLA VEZ como usuario ubuntu en la VM
 #
 #  Uso:
@@ -21,22 +21,22 @@ err()  { echo -e "${ROJO}[ERROR]${RESET} $1"; exit 1; }
 
 echo ""
 echo "================================================================"
-echo "  ValVic — Setup Oracle VM"
+echo "  ValVic â€” Setup Oracle VM"
 echo "================================================================"
 echo ""
 
-# ── 1. Verificar que estamos en la VM correcta ────────────────────
+# â”€â”€ 1. Verificar que estamos en la VM correcta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Verificando sistema..."
 [[ "$(uname -m)" == "aarch64" ]] && ok "ARM Ampere detectado (correcto)" \
-  || echo "[AVISO] No es ARM — continúa igual si es tu VM"
+  || echo "[AVISO] No es ARM â€” continÃºa igual si es tu VM"
 
-# ── 2. Actualizar sistema ─────────────────────────────────────────
+# â”€â”€ 2. Actualizar sistema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Actualizando paquetes del sistema..."
 sudo apt-get update -qq
 sudo apt-get upgrade -y -qq
 ok "Sistema actualizado"
 
-# ── 3. Instalar Python 3.11+ ──────────────────────────────────────
+# â”€â”€ 3. Instalar Python 3.11+ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Verificando Python..."
 if ! python3 --version | grep -qE "3\.(11|12|13)"; then
     info "Instalando Python 3.11..."
@@ -45,7 +45,7 @@ if ! python3 --version | grep -qE "3\.(11|12|13)"; then
 fi
 ok "Python $(python3 --version)"
 
-# ── 4. Crear entorno virtual ──────────────────────────────────────
+# â”€â”€ 4. Crear entorno virtual â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Creando entorno virtual..."
 VENV_DIR="/opt/valvic/venv"
 sudo mkdir -p /opt/valvic
@@ -54,12 +54,12 @@ python3 -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 ok "Entorno virtual en $VENV_DIR"
 
-# ── 5. Copiar archivos del proyecto ───────────────────────────────
+# â”€â”€ 5. Copiar archivos del proyecto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Copiando archivos del proyecto..."
 APP_DIR="/opt/valvic/app"
 mkdir -p "$APP_DIR"
 
-# Si estás corriendo este script desde la carpeta del proyecto:
+# Si estÃ¡s corriendo este script desde la carpeta del proyecto:
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cp "$SCRIPT_DIR"/*.py "$APP_DIR/" 2>/dev/null || true
 cp "$SCRIPT_DIR"/Agentes/*.py "$APP_DIR/" 2>/dev/null || true
@@ -69,13 +69,13 @@ mkdir -p "$APP_DIR/verticals"
 cp "$SCRIPT_DIR"/verticals/*.yaml "$APP_DIR/verticals/" 2>/dev/null || true
 ok "Archivos copiados en $APP_DIR"
 
-# ── 6. Instalar dependencias Python ──────────────────────────────
+# â”€â”€ 6. Instalar dependencias Python â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Instalando dependencias Python..."
 pip install --quiet --upgrade pip
 pip install --quiet -r "$APP_DIR/requirements.txt"
 ok "Dependencias instaladas"
 
-# ── 7. Configurar .env ────────────────────────────────────────────
+# â”€â”€ 7. Configurar .env â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if [ ! -f "$APP_DIR/.env" ]; then
     cp "$APP_DIR/.env.example" "$APP_DIR/.env"
     echo ""
@@ -84,16 +84,16 @@ if [ ! -f "$APP_DIR/.env" ]; then
     echo ""
 fi
 
-# ── 8. Instalar MySQL client para ejecutar schema ─────────────────
+# â”€â”€ 8. Instalar MySQL client para ejecutar schema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Instalando MySQL client..."
 sudo apt-get install -y mysql-client -qq
 ok "MySQL client instalado"
 
-# ── 9. Configurar servicio systemd para el webhook ───────────────
+# â”€â”€ 9. Configurar servicio systemd para el webhook â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Configurando servicio systemd para Vicky (webhook)..."
 sudo tee /etc/systemd/system/valvic-vicky.service > /dev/null <<EOF
 [Unit]
-Description=ValVic — Vicky Agente de Ventas WhatsApp
+Description=ValVic â€” Vicky Agente de Ventas WhatsApp
 After=network.target
 Wants=network.target
 
@@ -116,26 +116,27 @@ EOF
 sudo systemctl daemon-reload
 ok "Servicio valvic-vicky.service configurado"
 
-# ── 10. Configurar cron jobs ──────────────────────────────────────
+# â”€â”€ 10. Configurar cron jobs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Configurando cron jobs..."
-(crontab -l 2>/dev/null; echo "# ValVic — Prospector veterinarias (lunes 9am)") | crontab -
+(crontab -l 2>/dev/null; echo "# ValVic â€” Prospector veterinarias (lunes 9am)") | crontab -
 (crontab -l 2>/dev/null; echo "0 9 * * 1 cd /opt/valvic/app && /opt/valvic/venv/bin/python prospector.py --vertical veterinarias --ciudad 'Santiago' --cantidad 50 >> /var/log/valvic/prospector.log 2>&1") | crontab -
-(crontab -l 2>/dev/null; echo "# ValVic — Actualizar openers (lunes 9:30am, después del prospector)") | crontab -
+(crontab -l 2>/dev/null; echo "# ValVic â€” Actualizar openers (lunes 9:30am, despuÃ©s del prospector)") | crontab -
 (crontab -l 2>/dev/null; echo "30 9 * * 1 cd /opt/valvic/app && /opt/valvic/venv/bin/python actualizar_openers.py --cantidad 50 >> /var/log/valvic/openers.log 2>&1") | crontab -
 
 mkdir -p /var/log/valvic
 sudo chown ubuntu:ubuntu /var/log/valvic
 ok "Cron jobs configurados"
 
-# ── 11. Configurar firewall (Oracle tiene su propio security list) ─
+# â”€â”€ 11. Configurar firewall (Oracle tiene su propio security list) â”€
 info "Abriendo puerto 8001 en firewall local (Ubuntu)..."
 sudo ufw allow 8001/tcp 2>/dev/null || true
 ok "Puerto 8001 abierto"
 
-# ── 12. Configurar Nginx como reverse proxy ───────────────────────
+# â”€â”€ 12. Configurar Nginx como reverse proxy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Instalando y configurando Nginx..."
 sudo apt-get install -y nginx -qq
-sudo tee /etc/nginx/sites-available/valvic > /dev/null <<'EOF'
+sudo tee /etc/nginx/sites-available/valvic > /dev/null <<'NGINXEOF'
+# -- api.valvic.cl --- webhook 360dialog + JWT endpoints -------------------
 server {
     listen 80;
     server_name api.valvic.cl;
@@ -149,6 +150,16 @@ server {
         proxy_read_timeout 30s;
     }
 
+    location /api/ {
+        proxy_pass         http://127.0.0.1:8001;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 30s;
+    }
+
     location /health {
         proxy_pass http://127.0.0.1:8001;
     }
@@ -157,10 +168,35 @@ server {
         return 404;
     }
 }
-EOF
+
+# -- agenda.valvic.cl --- Panel CRM estatico + proxy API -------------------
+server {
+    listen 80;
+    server_name agenda.valvic.cl;
+
+    root "/opt/valvic/app/ValVic Web/panel";
+    index agenda.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+        autoindex off;
+    }
+
+    location /api/ {
+        proxy_pass         http://127.0.0.1:8001;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 30s;
+        proxy_pass_header  Set-Cookie;
+    }
+}
+NGINXEOF
 sudo ln -sf /etc/nginx/sites-available/valvic /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
-ok "Nginx configurado"
+ok "Nginx configurado (api.valvic.cl + agenda.valvic.cl)"
 
 echo ""
 echo "================================================================"
@@ -175,7 +211,7 @@ echo ""
 echo "  2. Ejecutar schema MySQL (una sola vez):"
 echo "     mysql -h \$MYSQL_HOST -u valvic_app -p valvic_db < /opt/valvic/app/schema_prospeccion_mysql.sql"
 echo ""
-echo "  3. Verificar conexión MySQL:"
+echo "  3. Verificar conexiÃ³n MySQL:"
 echo "     cd /opt/valvic/app && python3 -c 'from subagente_db import SubagenteDB; db=SubagenteDB(); db.init(); print(db.resumen())'"
 echo ""
 echo "  4. Iniciar el servicio de Vicky:"

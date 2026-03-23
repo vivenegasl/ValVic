@@ -8,9 +8,10 @@
   "use strict";
 
   // ── Constantes ────────────────────────────────────────────────────────────
-  const API_URL     = "/api/agenda";
-  const POLL_MS     = 60_000;       // Refresco automático cada 60 s
-  let   allCitas    = [];           // Almacén local para filtros
+  const API_URL      = "/api/agenda";
+  const API_ME_URL   = "/api/me";
+  const POLL_MS      = 60_000;
+  let   allCitas     = [];
   let   activeFilter = "all";
 
   // ── Elementos DOM ─────────────────────────────────────────────────────────
@@ -73,12 +74,50 @@
     });
   }
 
+  // ── Auth guard: verificar sesión al cargar ────────────────────────────────
+  async function checkSession() {
+    try {
+      const res = await fetch(API_ME_URL, { credentials: "include" });
+      if (res.status === 401) {
+        // Sesión inválida o expirada → redirigir a login
+        window.location.href = "login.html";
+        return false;
+      }
+      if (!res.ok) return false;    // Error del servidor — continuar sin nombre
+
+      const data = await res.json();
+      const nombre = data.nombre_negocio || data.email || "Panel ValVic";
+
+      // Inyectar nombre del negocio en el header (confirmación visual del contexto)
+      const topbarTitle = document.getElementById("topbar-negocio");
+      if (topbarTitle) topbarTitle.textContent = nombre;
+
+      const displayName = document.getElementById("user-display-name");
+      if (displayName) displayName.textContent = nombre;
+
+      const avatar = document.getElementById("user-avatar");
+      if (avatar) {
+        // Iniciales del nombre para el avatar
+        const parts = nombre.split(" ");
+        const initials = parts.slice(0, 2).map(function (p) { return p[0] || ""; }).join("").toUpperCase();
+        avatar.textContent = initials || "VV";
+      }
+
+      return true;
+    } catch (err) {
+      console.error("[agenda.js] checkSession error:", err);
+      // En caso de fallo de red no redirigir — el panel puede funcionar sin el nombre
+      return false;
+    }
+  }
+
   // ── Fetch ─────────────────────────────────────────────────────────────────
   async function fetchAgenda() {
     showLoading();
     try {
       const res = await fetch(API_URL, { credentials: "include" });
       if (res.status === 401) {
+        // La sesión expiró mientras el panel estaba abierto
         window.location.href = "login.html";
         return;
       }
@@ -293,6 +332,22 @@
     return str.trim().slice(0, 200);
   }
 
+  // ── Sidebar Glow Effect ──────────────────────────────────────────────────
+  const glow = document.getElementById("sidebar-glow");
+  if (sidebar && glow) {
+    sidebar.addEventListener("mousemove", function (e) {
+      const rect = sidebar.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      glow.style.left = x + "px";
+      glow.style.top = y + "px";
+      glow.classList.add("active");
+    });
+    sidebar.addEventListener("mouseleave", function () {
+      glow.classList.remove("active");
+    });
+  }
+
   // ── Scroll reveal (reutiliza clase .rv de la landing) ─────────────────────
   const observer = new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
@@ -302,9 +357,12 @@
   document.querySelectorAll(".rv").forEach(function (el) { observer.observe(el); });
 
   // ── Inicialización ─────────────────────────────────────────────────────────
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", async function () {
+    // 1. Verificar sesión PRIMERO — redirige si no hay JWT válido
+    await checkSession();
+    // 2. Cargar agenda del negocio autenticado
     fetchAgenda();
-    // Auto-refresh cada minuto
+    // 3. Auto-refresh cada minuto
     setInterval(fetchAgenda, POLL_MS);
   });
 
