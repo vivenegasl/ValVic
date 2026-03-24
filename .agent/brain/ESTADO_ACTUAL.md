@@ -2,10 +2,16 @@
 
 Este documento registra los hitos más recientes y las tareas pendientes para que el próximo agente o desarrollador sepa exactamente dónde continuar.
 
+## Estructura del Proyecto
+- `/Landing`: Sitio web de marketing y demos.
+- `/Panel`: Aplicativo de clientes (Agenda, Pacientes).
+- `/Agentes`: Backend FastAPI y agentes de IA.
+- `/.agent/brain`: Memoria compartida del proyecto.
+
 ## 🚀 Logros Recientes (Sesión Actual)
 - **Unificación de Marca:** Se cambió globalmente de "Val Vic" a "**ValVic**".
-- **Identidad Visual:** Transición completa a la temática **Esmeralda Premium** con acentos **Rubí**.
-- **Logotipos:** Implementación de `favicon-180-transparent.png` en toda la web para evitar fondos blancos.
+- **Estructura Modular:** Separación de `Landing/` (pública) y `Panel/` (privada) en la raíz.
+- **Identidad Visual:** Transición completa a la temática **Esmeralda Premium**.
 - **Luz de seguimiento (`cursor-glow`) reactiva:** Esmeralda en oscuros, Rubí en claros.
 - **Estrategia de Onboarding:** Definición del modelo "Embedded Signup" para escalabilidad de clientes finales.
 - **Seguridad y Estructura:** Refactorización del Panel para separar CSS y JS externos.

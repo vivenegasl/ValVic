@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Citas — ValVic CRM</title>
+    <meta name="description" content="Panel de gestión de citas agendadas por la IA de ValVic.">
+    <!-- Fuentes premium ValVic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/panel.css">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-glow" id="sidebar-glow"></div>
+        <a href="../index.html" class="brand" aria-label="ValVic inicio">
+            <img src="../favicon-180-transparent.png" alt="ValVic" class="brand-icon" width="30" height="30" loading="lazy">
+            ValVic
+        </a>
+
+        <nav class="nav-menu" role="navigation" aria-label="Menú principal">
+            <a href="agenda.html" class="nav-link" id="nav-dashboard" aria-label="Dashboard">
+                <i class="ph ph-squares-four nav-icon" aria-hidden="true"></i>
+                Dashboard
+            </a>
+            <a href="agenda.html" class="nav-link active" aria-current="page" aria-label="Agenda de citas">
+                <i class="ph ph-calendar-blank nav-icon" aria-hidden="true"></i>
+                Agenda / Citas
+            </a>
+            <a href="pacientes.html" class="nav-link" aria-label="CRM de clientes">
+                <i class="ph ph-users nav-icon" aria-hidden="true"></i>
+                Clientes CRM
+            </a>
+            <a href="configuracion.html" class="nav-link" aria-label="Configuración de IA Vicky">
+                <i class="ph ph-robot nav-icon" aria-hidden="true"></i>
+                IA de Vicky
+            </a>
+            <div class="nav-spacer"></div>
+            <a href="configuracion.html" class="nav-link nav-link--muted" aria-label="Configuración">
+                <i class="ph ph-gear nav-icon" aria-hidden="true"></i>
+                Configuración
+            </a>
+            <button class="nav-link nav-link--muted nav-btn-logout" id="btn-logout" type="button" aria-label="Cerrar sesión">
+                <i class="ph ph-sign-out nav-icon" aria-hidden="true"></i>
+                Cerrar Sesión
+            </button>
+        </nav>
+    </aside>
+
+    <!-- Overlay para sidebar mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+    <!-- ═══ ESCRITORIO PRINCIPAL ═══ -->
+    <main class="desk" role="main">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <!-- Botón hamburguesa (solo mobile) -->
+            <button class="topbar-menu-btn" id="btn-menu" type="button" aria-label="Abrir menú">
+                <i class="ph ph-list" aria-hidden="true"></i>
+            </button>
+
+            <h1 class="topbar-title" id="topbar-negocio">Panel ValVic</h1>
+
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name" id="user-display-name">Cargando…</span>
+                    <span class="user-role">Administrador</span>
+                </div>
+                <div class="user-avatar" id="user-avatar" aria-hidden="true">VV</div>
+            </div>
+        </header>
+
+        <!-- ÁREA SCROLLABLE -->
+        <div class="content-scroll">
+
+            <!-- Orb decorativo (replica landing) -->
+            <div class="content-orb" aria-hidden="true"></div>
+
+            <!-- STATS GRID -->
+            <section aria-labelledby="stats-heading">
+                <h2 id="stats-heading" class="sr-only">Estadísticas generales</h2>
+                <div class="stats-grid">
+                    <div class="stat-card rv" role="region" aria-label="Total de citas">
+                        <div class="stat-icon stat-icon--blue">
+                            <i class="ph ph-calendar-check" aria-hidden="true"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-val" id="stat-total" aria-live="polite">—</span>
+                            <span class="stat-label">Citas ValVic Acumuladas</span>
+                        </div>
+                        <div class="stat-glow" aria-hidden="true"></div>
+                    </div>
+
+                    <div class="stat-card rv" role="region" aria-label="Citas agendadas por IA">
+                        <div class="stat-icon stat-icon--green">
+                            <i class="ph ph-robot" aria-hidden="true"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-val" id="stat-ia" aria-live="polite">—</span>
+                            <span class="stat-label">Agendadas por IA (mes)</span>
+                        </div>
+                        <div class="stat-glow stat-glow--green" aria-hidden="true"></div>
+                    </div>
+
+                    <div class="stat-card rv" role="region" aria-label="Citas pendientes">
+                        <div class="stat-icon stat-icon--gold">
+                            <i class="ph ph-clock" aria-hidden="true"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-val" id="stat-pending" aria-live="polite">—</span>
+                            <span class="stat-label">Pendientes de confirmar</span>
+                        </div>
+                        <div class="stat-glow stat-glow--gold" aria-hidden="true"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TABLA AGENDA -->
+            <section aria-labelledby="agenda-heading">
+                <div class="section-header">
+                    <h2 class="section-title" id="agenda-heading">Citas Programadas</h2>
+                    <div class="section-actions">
+                        <!-- Filtro por estado -->
+                        <div class="filter-pills" role="group" aria-label="Filtrar por estado">
+                            <button class="pill-btn pill-btn--active" data-filter="all" type="button">Todas</button>
+                            <button class="pill-btn" data-filter="confirmada" type="button">✅ Confirmadas</button>
+                            <button class="pill-btn" data-filter="pendiente_confirmacion" type="button">⏳ Pendientes</button>
+                            <button class="pill-btn" data-filter="reagendada" type="button">🔄 Reagendadas</button>
+                        </div>
+                        <button class="btn-primary" id="btn-refresh" type="button" aria-label="Actualizar agenda">
+                            <i class="ph ph-arrows-clockwise" aria-hidden="true"></i>
+                            Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="agenda-list" id="agenda-container" role="list" aria-live="polite" aria-label="Lista de citas">
+                    <!-- Placeholder de carga -->
+                    <div class="agenda-loading" id="agenda-loading">
+                        <div class="spinner" aria-hidden="true"></div>
+                        <span>Cargando citas en tiempo real…</span>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- JS externo (cumple CSP 'self') -->
+    <script src="js/agenda.js"></script>
+</body>
+</html>

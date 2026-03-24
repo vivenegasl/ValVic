@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValVic — Tests</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:monospace;background:#0F1420;color:#E5E5E5;padding:2rem;}
+h1{font-size:18px;color:#4B79FF;margin-bottom:.5rem;}
+.subtitle{font-size:13px;color:#5C5C62;margin-bottom:2rem;}
+.suite{margin-bottom:2rem;}
+.suite-title{font-size:14px;font-weight:bold;color:#7B9FFF;margin-bottom:.5rem;
+             border-left:3px solid #4B79FF;padding-left:8px;}
+.test{font-size:13px;padding:4px 8px;border-radius:4px;margin-bottom:3px;
+      display:flex;align-items:center;gap:8px;}
+.test.pass{background:rgba(22,199,132,.1);color:#16C784;}
+.test.fail{background:rgba(234,57,67,.12);color:#EA3943;}
+.test.pass::before{content:"✓";}
+.test.fail::before{content:"✗";}
+.summary{margin-top:2rem;padding:1rem;border-radius:8px;font-size:14px;}
+.summary.all-pass{background:rgba(22,199,132,.1);color:#16C784;border:1px solid rgba(22,199,132,.2);}
+.summary.has-fail{background:rgba(234,57,67,.1);color:#EA3943;border:1px solid rgba(234,57,67,.2);}
+.error-detail{font-size:11px;color:#EA3943;opacity:.7;margin-left:16px;}
+</style>
+</head>
+<body>
+
+<h1>ValVic — Test Suite</h1>
+<p class="subtitle">Tests unitarios para funciones puras de utils.js</p>
+
+<div id="results"></div>
+<div id="summary"></div>
+
+<!-- Cargar las funciones bajo test -->
+<script src="../js/config.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════════
+//  Mini test runner
+// ══════════════════════════════════════════════════════════════
+const resultados = [];
+
+function describe(suiteName, fn) {
+  const suite = { name: suiteName, tests: [] };
+  resultados.push(suite);
+  const it = (name, testFn) => {
+    try {
+      testFn();
+      suite.tests.push({ name, pass: true });
+    } catch (err) {
+      suite.tests.push({ name, pass: false, error: err.message });
+    }
+  };
+  fn(it);
+}
+
+function expect(val) {
+  return {
+    toBe:         (expected) => { if (val !== expected)     throw new Error(`Expected "${expected}", got "${val}"`); },
+    toEqual:      (expected) => { if (JSON.stringify(val) !== JSON.stringify(expected)) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(val)}`); },
+    toBeNull:     ()         => { if (val !== null)         throw new Error(`Expected null, got "${val}"`); },
+    toBeTruthy:   ()         => { if (!val)                 throw new Error(`Expected truthy, got "${val}"`); },
+    toBeFalsy:    ()         => { if (val)                  throw new Error(`Expected falsy, got "${val}"`); },
+    toContain:    (str)      => { if (!val.includes(str))   throw new Error(`Expected "${val}" to contain "${str}"`); },
+    toBeGreaterThan: (n)     => { if (val <= n)             throw new Error(`Expected ${val} > ${n}`); },
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TESTS: sanitize()
+// ══════════════════════════════════════════════════════════════
+describe("sanitize()", (it) => {
+  it("escapa < y >", () => {
+    expect(sanitize("<script>")).toBe("&lt;script&gt;");
+  });
+  it("escapa comillas dobles", () => {
+    expect(sanitize('"hola"')).toBe("&quot;hola&quot;");
+  });
+  it("escapa comillas simples", () => {
+    expect(sanitize("it's")).toBe("it&#x27;s");
+  });
+  it("escapa &", () => {
+    expect(sanitize("a & b")).toBe("a &amp; b");
+  });
+  it("texto limpio no cambia", () => {
+    expect(sanitize("Hola mundo")).toBe("Hola mundo");
+  });
+  it("trim de espacios", () => {
+    expect(sanitize("  hola  ")).toBe("hola");
+  });
+  it("devuelve '' para no-string", () => {
+    expect(sanitize(null)).toBe("");
+    expect(sanitize(undefined)).toBe("");
+    expect(sanitize(123)).toBe("");
+  });
+  it("XSS clásico bloqueado", () => {
+    const result = sanitize('<img src=x onerror="alert(1)">');
+    expect(result).toContain("&lt;");
+    expect(result).toContain("&gt;");
+  });
+  it("XSS con atributo bloqueado", () => {
+    expect(sanitize('"><script>alert(1)</script>')).toContain("&lt;");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+//  TESTS: validarForm()
+// ══════════════════════════════════════════════════════════════
+describe("validarForm()", (it) => {
+  it("email válido pasa", () => {
+    expect(validarForm("María", "maria@gmail.com")).toBeNull();
+  });
+  it("teléfono chileno pasa", () => {
+    expect(validarForm("Juan", "+56912345678")).toBeNull();
+  });
+  it("teléfono con espacios pasa", () => {
+    expect(validarForm("Ana", "+56 9 1234 5678")).toBeNull();
+  });
+  it("nombre vacío falla", () => {
+    expect(validarForm("", "test@test.com")).toBeTruthy();
+  });
+  it("nombre de 1 char falla", () => {
+    expect(validarForm("A", "test@test.com")).toBeTruthy();
+  });
+  it("nombre de 81 chars falla", () => {
+    expect(validarForm("A".repeat(81), "test@test.com")).toBeTruthy();
+  });
+  it("contacto inválido falla", () => {
+    expect(validarForm("Juan", "no-es-valido")).toBeTruthy();
+  });
+  it("contacto vacío falla", () => {
+    expect(validarForm("Juan", "")).toBeTruthy();
+  });
+  it("email sin @ falla", () => {
+    expect(validarForm("Juan", "juangmail.com")).toBeTruthy();
+  });
+  it("email con @ pero sin dominio falla", () => {
+    expect(validarForm("Juan", "juan@")).toBeTruthy();
+  });
+  it("nombre con 2 chars exactos pasa", () => {
+    expect(validarForm("Jo", "+56912345678")).toBeNull();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+//  TESTS: checkRateLimit()
+// ══════════════════════════════════════════════════════════════
+describe("checkRateLimit()", (it) => {
+  const COOLDOWN = 30000;
+
+  it("primer envío (ultimoEnvio=0) pasa siempre", () => {
+    const r = checkRateLimit(0, COOLDOWN, Date.now());
+    expect(r.ok).toBe(true);
+    expect(r.segundosRestantes).toBe(0);
+  });
+  it("dentro del cooldown bloquea", () => {
+    const ahora = Date.now();
+    const r = checkRateLimit(ahora - 5000, COOLDOWN, ahora);
+    expect(r.ok).toBe(false);
+    expect(r.segundosRestantes).toBeGreaterThan(0);
+  });
+  it("fuera del cooldown permite", () => {
+    const ahora = Date.now();
+    const r = checkRateLimit(ahora - 31000, COOLDOWN, ahora);
+    expect(r.ok).toBe(true);
+  });
+  it("segundos restantes son correctos", () => {
+    const ahora = Date.now();
+    const r = checkRateLimit(ahora - 20000, COOLDOWN, ahora);
+    expect(r.ok).toBe(false);
+    expect(r.segundosRestantes).toBe(10);
+  });
+  it("exactamente en el límite pasa", () => {
+    const ahora = Date.now();
+    const r = checkRateLimit(ahora - COOLDOWN, COOLDOWN, ahora);
+    expect(r.ok).toBe(true);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+//  TESTS: buildPayload()
+// ══════════════════════════════════════════════════════════════
+describe("buildPayload()", (it) => {
+  it("sanitiza todos los campos", () => {
+    const p = buildPayload({
+      nombre:   '<b>Juan</b>',
+      negocio:  'Mi "Negocio"',
+      contacto: 'juan@test.com',
+      tipo:     'Clínica',
+      mensaje:  '<script>alert(1)</script>',
+    }, "valvic.cl");
+
+    expect(p.nombre).toBe("&lt;b&gt;Juan&lt;/b&gt;");
+    expect(p.negocio).toBe("Mi &quot;Negocio&quot;");
+    expect(p.mensaje).toContain("&lt;script&gt;");
+  });
+  it("agrega el campo origen", () => {
+    const p = buildPayload({ nombre: "Test", contacto: "t@t.com" }, "valvic.cl");
+    expect(p.origen).toBe("valvic.cl");
+  });
+  it("campos vacíos quedan como string vacío", () => {
+    const p = buildPayload({}, "valvic.cl");
+    expect(p.nombre).toBe("");
+    expect(p.negocio).toBe("");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+//  RENDER RESULTADOS
+// ══════════════════════════════════════════════════════════════
+const container = document.getElementById("results");
+let totalPass = 0, totalFail = 0;
+
+resultados.forEach((suite) => {
+  const suiteEl = document.createElement("div");
+  suiteEl.className = "suite";
+
+  const titleEl = document.createElement("div");
+  titleEl.className = "suite-title";
+  titleEl.textContent = suite.name;
+  suiteEl.appendChild(titleEl);
+
+  suite.tests.forEach((test) => {
+    const el = document.createElement("div");
+    el.className = "test " + (test.pass ? "pass" : "fail");
+    el.textContent = test.name;
+    if (!test.pass && test.error) {
+      const detail = document.createElement("div");
+      detail.className = "error-detail";
+      detail.textContent = test.error;
+      el.appendChild(detail);
+      totalFail++;
+    } else {
+      totalPass++;
+    }
+    suiteEl.appendChild(el);
+  });
+
+  container.appendChild(suiteEl);
+});
+
+const summaryEl = document.getElementById("summary");
+summaryEl.className = "summary " + (totalFail === 0 ? "all-pass" : "has-fail");
+summaryEl.textContent = totalFail === 0
+  ? `✅ Todos los tests pasaron (${totalPass}/${totalPass})`
+  : `❌ ${totalFail} test(s) fallaron — ${totalPass} pasaron de ${totalPass + totalFail}`;
+</script>
+</body>
+</html>

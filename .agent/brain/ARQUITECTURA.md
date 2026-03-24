@@ -4,12 +4,14 @@ Mapa rápido para entender la ubicación de los archivos y la lógica del sistem
 
 ## 📂 Directorios Clave
 
-### 1. `/ValVic Web` (Frontend Hostinger)
-- `/css`: Estilos globales y específicos (`styles.css`, `panel.css`).
-- `/js`: Lógica de navegación, animaciones y formularios (`nav.js`, `animations.js`, `neural.js`).
-- `/panel`: Secciones privadas del cliente (`agenda.html`, `pacientes.html`, `configuracion.html`).
-- `/demos`: Páginas interactivas de demostración de servicios IA.
+### 1. `/Landing` (Sitio Público)
+- Contiene la web de marketing, activos públicos y demos.
 - `index.html`: Landing page principal reactiva.
+
+### 2. `/Panel` (App de Clientes)
+- Panel administrativo independiente.
+- `/css` y `/js`: Recursos exclusivos del dashboard.
+- `login.html`, `agenda.html`: Interfaces funcionales.
 
 ### 2. `/Agentes` (Backend Python/FastAPI)
 - `agente_conversacion.py`: Lógica principal de interacción con Claude.

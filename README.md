@@ -3,7 +3,11 @@
 > [!IMPORTANT]
 > **REGLA DE MEMORIA VIVA (MANDATORIA):** Al inicio de cada sesión comercial o técnica, el agente DEBE leer la carpeta `/.agent/brain/`. Al finalizar cada hito o antes de terminar la sesión, el agente DEBE actualizar proactivamente `ESTADO_ACTUAL.md` y `ARQUITECTURA.md` basándose en el trabajo realizado. Esto garantiza la persistencia del contexto senior de ValVic.
 
-Sistema multi-agente en Python puro y FastAPI para automatizar la prospección, negociación y agendamiento de negocios de servicios en Chile a través de WhatsApp.
+## Estructura del Proyecto
+- `/Landing`: Sitio web de marketing, activos públicos y demos.
+- `/Panel`: Aplicativo de clientes (Agenda, Pacientes, Cobros).
+- `/Agentes`: Backend FastAPI y lógica de agentes IA (Vicky).
+- `/.agent/brain`: Memoria compartida del proyecto.
 
 ## CÓMO EJECUTAR EL PROSPECTOR 
 
@@ -22,36 +26,3 @@ python Agentes/prospector.py --vertical psicologos --ciudad Santiago --enviar
 # Revisar mensajes generados o estado de prospectos
 python Agentes/prospector.py --vertical dental --solo-revisar
 ```
-
----
-
-## INVENTARIO DE ARCHIVOS PRINCIPALES
-
-### Sistema Central (Marzo 2026)
-| Archivo | Función |
-|---|---|
-| `Agentes/prospector.py` | Orquestador multi-vertical. Busca, califica e inyecta prospectos. |
-| `Agentes/subagente_db.py` | Capa base de datos ORM con AIOMySQL persistente. |
-| `Agentes/prompts_ventas.py` | Prompt dinámico de cierres, pre-respuestas y escaleras de negociación. |
-| `Agentes/agente_conversacion.py` | "Vicky" y otros agentes - Toma decisión asíncrona inbound de WA. |
-| `verticals/` | Carpeta .yaml donde se define cada arquetipo sin tocar código. |
-| `schema_prospeccion_mysql.sql` | Estructura de BD en sintaxis nativa de MySQL HeatWave. |
-
----
-
-## MAPA ORGÁNICO DE AGENTES
-
-### Capa 1 — Operación crítica
-- **Agente de Citas:** Atiende WA de pacientes, agenda en MySQL usando NLP natural.
-- **Agente Recordatorios:** Dispara alertas via cron a 24h y 1h.
-- **Agente Reportes:** Envía KPIs semanales y análisis de ROI al dueño de la clínica.
-
-### Capa 2 — Crecimiento y Generación (Motor ValVic)
-- **Prospector Multi-vertical (Activo):** Búsqueda API de clínicas, generación paralela del mensaje rompehielo y dispatch por 360dialog.
-- **Vicky (Activo):** Agente Sales/SDR. Rebate objeciones asíncronamente en WhatsApp con Debounce de tiempos.
-- **Seguimiento Autómata:** Reintenta el lead al día 3 garantizando que nunca se olvida un chat.
-
-### Capa Transversal IA (Optimización)
-- **Routing:** Enrutador clasificador de bajo costo en `claude-haiku`.
-- **Generativo:** Motor persuasivo complejo usando `claude-sonnet`.
-- **Caching:** Ahorros de hasta 90% con Prompt Caching en directrices estáticas de YAML y system prompts en las operaciones paralelas masivas.
