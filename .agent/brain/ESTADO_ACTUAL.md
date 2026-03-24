@@ -6,11 +6,16 @@ Este documento registra los hitos más recientes y las tareas pendientes para qu
 - `/Landing`: Sitio web de marketing y demos.
 - `/Panel`: Aplicativo de clientes (Agenda, Pacientes).
 - `/Agentes`: Backend FastAPI y agentes de IA.
+  - `/verticals`: Configuraciones YAML de negocio.
+- `/Database`: Esquemas SQL (MySQL y legacy Postgres).
+- `/docs`: Documentación estratégica y Roadmap.
+- `/legacy`: Cementerio de scripts antiguos y backups.
 - `/.agent/brain`: Memoria compartida del proyecto.
 
 ## 🚀 Logros Recientes (Sesión Actual)
 - **Unificación de Marca:** Se cambió globalmente de "Val Vic" a "**ValVic**".
-- **Estructura Modular:** Separación de `Landing/` (pública) y `Panel/` (privada) en la raíz.
+- **Estructura Modular:** Separación de `Landing/` y `Panel/` en la raíz.
+- **Consolidación Técnica:** Unificación de esquemas en `/Database` e integración de verticales en `/Agentes`.
 - **Identidad Visual:** Transición completa a la temática **Esmeralda Premium**.
 - **Luz de seguimiento (`cursor-glow`) reactiva:** Esmeralda en oscuros, Rubí en claros.
 - **Estrategia de Onboarding:** Definición del modelo "Embedded Signup" para escalabilidad de clientes finales.

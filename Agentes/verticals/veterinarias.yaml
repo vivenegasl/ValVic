@@ -1,0 +1,95 @@
+id: veterinarias
+nombre_rubro: Clínicas Veterinarias
+agente_nombre: Vicky
+producto_principal: citas
+
+busqueda:
+  queries:
+    - "clínica veterinaria"
+    - "veterinaria"
+    - "hospital veterinario"
+    - "médico veterinario"
+  zonas_default:
+    santiago:
+      - "Santiago centro"
+      - "Providencia"
+      - "Las Condes"
+      - "Maipú"
+      - "La Florida"
+      - "Pudahuel"
+      - "Peñalolén"
+      - "San Bernardo"
+      - "Ñuñoa"
+      - "Vitacura"
+    valparaiso:
+      - "Valparaíso"
+      - "Viña del Mar"
+      - "Quilpué"
+      - "Villa Alemana"
+      - "Con Con"
+
+problema:
+  descripcion: "llamadas perdidas durante la consulta porque el veterinario está atendiendo"
+  gancho_economico: "Cada llamada no atendida es un dueño que llama a la siguiente veterinaria"
+  pregunta_opener: "¿Les pasa seguido que pierden llamadas mientras están en consulta?"
+  datos_industria: "Las veterinarias reciben el 60% de sus llamadas en horario de consulta"
+
+observaciones_por_volumen:
+  alto: "Con ese volumen de pacientes, imagino que el teléfono suena constantemente"
+  medio: "Tienen buena reputación en la zona"
+  bajo: "Vi que están creciendo en la zona"
+  umbral_alto: 60
+  umbral_medio: 20
+
+objeciones:
+  ya_tienen_sistema: "¿Ese sistema responde el WhatsApp de los dueños de mascotas solo o igual tienen que hacerlo a mano?"
+  muy_caro: "¿Cuántas llamadas no pueden atender por semana? Con dos pacientes nuevos al mes ya cubre el costo."
+  somos_pequenos: "Para clínicas pequeñas es donde más cambia — sin contratar secretaria extra."
+  no_tengo_tiempo: "¿Cuándo te viene bien? Puedo pedirle a Vicky que te llame esta semana."
+  lo_pienso: "¿Qué es lo que quieres pensar? A veces puedo resolverlo ahora."
+
+tono: "cercano y directo"
+contexto_tono: >
+  Los dueños de veterinarias son amantes de los animales que también son empresarios.
+  Tono más relajado que el dental, más emocional. Se puede mencionar el bienestar
+  de los pacientes (mascotas) como parte del pitch.
+
+precios:
+  citas_mensual_lista:  80
+  citas_mensual_piso:   65
+  citas_impl_lista:    100
+  citas_impl_piso:      90
+  web_mensual_lista:    50
+  web_mensual_piso:     40
+  web_impl_lista:      100
+  web_impl_piso:        90
+  bundle_mensual_lista: 120
+  bundle_mensual_piso:   80
+  bundle_impl_lista:    180
+  bundle_impl_piso:     160
+  senal_impl: 50
+
+concesiones:
+  - id: descuento_impl_10
+    texto: "Te hago el 10% en la implementación, queda en $90."
+    activar_si: primera_objecion_precio
+  - id: pago_mitad_mitad
+    texto: "Lo dividimos: $50 para empezar y el resto cuando estemos funcionando."
+    activar_si: objecion_flujo_caja
+  - id: descuento_mensual_3meses
+    texto: "Los primeros 3 meses te los dejo a $70/mes, después precio normal."
+    activar_si: segunda_objecion_precio
+  - id: primer_mes_gratis
+    texto: "Te dejo el primer mes sin costo para que compruebes los resultados."
+    activar_si: ultima_instancia
+
+deteccion_web:
+  sin_web:
+    pitch: "Vi que no tienen sitio web. Los dueños de mascotas buscan en Google antes de llamar."
+    producto_sugerido: bundle
+  web_basica:
+    pitch: "Tienen web pero sin posicionamiento en Google."
+    producto_sugerido: bundle
+  web_buena:
+    pitch: null
+    producto_sugerido: citas

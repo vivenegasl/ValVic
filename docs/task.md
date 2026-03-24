@@ -21,6 +21,7 @@
 - [x] Interactividad Landing: Rastro de luz (`cursor-glow`) reactivo (Emerald/Ruby).
 - [x] Refactorización Panel: Separación estricta de CSS y JS en `/Panel/css` y `/Panel/js`.
 - [x] Independización Arquitectónica: `/Landing` y `/Panel` como módulos raíz.
+- [x] Consolidación Estructural: Unificación de `/Database` y `/Agentes/verticals`.
 - [x] Corrección Smooth-Scroll en menú de navegación.
 
 

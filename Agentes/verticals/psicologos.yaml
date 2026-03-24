@@ -1,0 +1,93 @@
+id: psicologos
+nombre_rubro: Psicólogos y Coaches
+agente_nombre: Valentina
+producto_principal: citas
+
+busqueda:
+  queries:
+    - "psicólogo"
+    - "psicóloga"
+    - "consulta psicológica"
+    - "coach"
+    - "terapeuta"
+    - "centro de psicología"
+  zonas_default:
+    santiago:
+      - "Providencia"
+      - "Las Condes"
+      - "Ñuñoa"
+      - "Santiago centro"
+      - "Vitacura"
+      - "Maipú"
+      - "San Bernardo"
+    valparaiso:
+      - "Viña del Mar"
+      - "Valparaíso"
+
+problema:
+  descripcion: "pacientes que no confirman y dejan horas vacías de alto valor"
+  gancho_economico: "Una sesión de 50 minutos vale $40-80 USD. Cada no-show es ingreso perdido."
+  pregunta_opener: "¿Tienen muchos pacientes que no confirman y dejan la hora vacía?"
+  datos_industria: "Los consultorios de psicología tienen 15-20% de tasa de no-show sin recordatorios"
+
+observaciones_por_volumen:
+  alto: "Tienen bastante presencia online para el rubro"
+  medio: "Tienen buena reputación en la zona"
+  bajo: "Vi que están en la zona"
+  umbral_alto: 30
+  umbral_medio: 10
+
+objeciones:
+  ya_tienen_sistema: "¿Ese sistema envía recordatorio automático por WhatsApp 24h antes?"
+  muy_caro: "¿Cuántas sesiones vacías tienen por mes? Con dos sesiones recuperadas ya se paga."
+  somos_pequenos: "Para consultorios individuales es donde más cambia — sin costo administrativo extra."
+  privacidad: "El sistema solo maneja nombre, teléfono y horario — nada clínico."
+  no_tengo_tiempo: "¿Cuándo tienes 15 minutos? Puedo pedirle a Valentina que te contacte."
+  lo_pienso: "¿Qué es lo que te frena? A veces puedo resolverlo ahora."
+
+tono: "profesional y empático"
+contexto_tono: >
+  Hablas con profesionales de la salud mental. Tono más formal que spa.
+  Importante mencionar discreción y simplicidad. No usar urgencia artificial.
+  El dolor principal es el tiempo administrativo y los no-show.
+  Evitar promesas de crecimiento agresivo — va en contra del perfil del cliente.
+
+precios:
+  citas_mensual_lista:  80
+  citas_mensual_piso:   65
+  citas_impl_lista:    100
+  citas_impl_piso:      90
+  web_mensual_lista:    50
+  web_mensual_piso:     40
+  web_impl_lista:      100
+  web_impl_piso:        90
+  bundle_mensual_lista: 120
+  bundle_mensual_piso:   80
+  bundle_impl_lista:    180
+  bundle_impl_piso:     160
+  senal_impl: 50
+
+concesiones:
+  - id: descuento_impl_10
+    texto: "Te hago el 10% en la implementación, queda en $90."
+    activar_si: primera_objecion_precio
+  - id: pago_mitad_mitad
+    texto: "Lo dividimos en dos pagos: uno al inicio y uno al entregar."
+    activar_si: objecion_flujo_caja
+  - id: descuento_mensual_3meses
+    texto: "Los primeros 3 meses a $70/mes, después precio normal."
+    activar_si: segunda_objecion_precio
+  - id: primer_mes_gratis
+    texto: "El primer mes sin costo para que pruebes el sistema."
+    activar_si: ultima_instancia
+
+deteccion_web:
+  sin_web:
+    pitch: "Vi que no tienen sitio web. Los pacientes nuevos buscan en Google 'psicólogo [zona]' antes de llamar."
+    producto_sugerido: bundle
+  web_basica:
+    pitch: "Tienen web pero sin posicionamiento en Google para su zona."
+    producto_sugerido: bundle
+  web_buena:
+    pitch: null
+    producto_sugerido: citas

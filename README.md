@@ -7,7 +7,11 @@
 - `/Landing`: Sitio web de marketing, activos públicos y demos.
 - `/Panel`: Aplicativo de clientes (Agenda, Pacientes, Cobros).
 - `/Agentes`: Backend FastAPI y lógica de agentes IA (Vicky).
-- `/.agent/brain`: Memoria compartida del proyecto.
+  - `/verticals`: Configuraciones YAML por tipo de negocio.
+- `/Database`: Esquemas SQL MySQL y legacy PostgreSQL.
+- `/docs`: Documentación estratégica y Roadmap.
+- `/legacy`: Cementerio de scripts antiguos y backups.
+- `/.agent/brain`: Memoria compartida del proyecto (Cerebro).
 
 ## CÓMO EJECUTAR EL PROSPECTOR 
 

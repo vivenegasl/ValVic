@@ -13,13 +13,14 @@ Mapa rápido para entender la ubicación de los archivos y la lógica del sistem
 - `/css` y `/js`: Recursos exclusivos del dashboard.
 - `login.html`, `agenda.html`: Interfaces funcionales.
 
-### 2. `/Agentes` (Backend Python/FastAPI)
-- `agente_conversacion.py`: Lógica principal de interacción con Claude.
-- `auth_panel.py`: Manejo de sesiones y seguridad JWT.
-- `subagente_db.py`: Interfaz de comunicación con MySQL.
+### 3. `/Agentes` (Backend IA)
+- `agente_conversacion.py`: Lógica de interacción Claude/Vicky.
+- `/verticals`: Configuraciones YAML de negocio (Dental, Vet, etc.).
+- `subagente_db.py`: Interfaz MySQL HeatWave.
 
-### 3. `/sql` & `/Estructuras`
-- Contiene los esquemas de bases de datos tanto para MySQL como legacy (PostgreSQL).
+### 4. `/Database` (Persistencia)
+- `/legacy_postgres`: Copia de respaldo de esquemas PostgreSQL.
+- `*_mysql.sql`: Esquemas de producción para Oracle Cloud.
 
 ### 4. `/.agent/brain/` (Memoria Compartida)
 - Lugar donde reside el contexto para IAs (este directorio).

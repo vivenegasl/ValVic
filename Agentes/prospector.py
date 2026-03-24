@@ -63,7 +63,7 @@ DIALOG360_PHONE   = os.getenv("DIALOG360_PHONE_ID", "")
 claude_sync  = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 claude_async = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 
-VERTICALS_DIR  = Path(__file__).parent.parent / "verticals"
+VERTICALS_DIR  = Path(__file__).parent / "verticals"
 MAX_PARALELO   = 8
 PAUSA_ENVIO    = 3.0
 MAX_ENVIOS_DIA = 100
