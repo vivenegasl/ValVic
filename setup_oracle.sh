@@ -57,19 +57,19 @@ python3 -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 ok "Entorno virtual en $VENV_DIR"
 
-# â”€â”€ 5. Copiar archivos del proyecto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-info "Copiando archivos del proyecto..."
+# ── 5. Copiar archivos del proyecto ───────────────────────────
+info "Copiando archivos del proyecto y Panel..."
 APP_DIR="/opt/valvic/app"
 mkdir -p "$APP_DIR"
 
-# Si estÃ¡s corriendo este script desde la carpeta del proyecto:
+# Si estás corriendo este script desde la carpeta del proyecto:
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cp "$SCRIPT_DIR"/*.py "$APP_DIR/" 2>/dev/null || true
-cp "$SCRIPT_DIR"/Agentes/*.py "$APP_DIR/" 2>/dev/null || true
+cp -r "$SCRIPT_DIR"/Agentes "$APP_DIR/" 2>/dev/null || true
+cp -r "$SCRIPT_DIR"/Database "$APP_DIR/" 2>/dev/null || true
+cp -r "$SCRIPT_DIR"/Panel "$APP_DIR/" 2>/dev/null || true
 cp "$SCRIPT_DIR/requirements.txt" "$APP_DIR/"
 cp "$SCRIPT_DIR/.env.example" "$APP_DIR/"
-mkdir -p "$APP_DIR/verticals"
-cp "$SCRIPT_DIR"/verticals/*.yaml "$APP_DIR/verticals/" 2>/dev/null || true
 ok "Archivos copiados en $APP_DIR"
 
 # â”€â”€ 6. Instalar dependencias Python â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -179,8 +179,8 @@ server {
     listen 80;
     server_name agenda.valvic.cl;
 
-    root "/opt/valvic/app/ValVic Web/panel";
-    index agenda.html;
+    root "/opt/valvic/app/Panel";
+    index login.html;
 
     location / {
         try_files $uri $uri/ =404;
@@ -213,8 +213,11 @@ echo ""
 echo "  1. Editar credenciales:"
 echo "     nano /opt/valvic/app/.env"
 echo ""
-echo "  2. Ejecutar schema MySQL (una sola vez):"
-echo "     mysql -h \$MYSQL_HOST -u valvic_app -p valvic_db < /opt/valvic/app/schema_prospeccion_mysql.sql"
+echo "  2. Crear BD y Ejecutar schemas MySQL (una sola vez):"
+echo "     A) mysql -h \$MYSQL_HOST -u valvic_app -p -e 'CREATE DATABASE IF NOT EXISTS valvic_db;'"
+echo "     B) mysql -h \$MYSQL_HOST -u valvic_app -p valvic_db < /opt/valvic/app/Database/valvic_schema_principal_mysql.sql"
+echo "     C) mysql -h \$MYSQL_HOST -u valvic_app -p valvic_db < /opt/valvic/app/Database/valvic_schema_reportes_mysql.sql"
+echo "     D) mysql -h \$MYSQL_HOST -u valvic_app -p valvic_db < /opt/valvic/app/Database/schema_prospeccion_mysql.sql"
 echo ""
 echo "  3. Verificar conexiÃ³n MySQL:"
 echo "     cd /opt/valvic/app && python3 -c 'from subagente_db import SubagenteDB; db=SubagenteDB(); db.init(); print(db.resumen())'"
