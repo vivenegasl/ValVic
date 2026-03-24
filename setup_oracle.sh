@@ -30,17 +30,20 @@ info "Verificando sistema..."
 [[ "$(uname -m)" == "aarch64" ]] && ok "ARM Ampere detectado (correcto)" \
   || echo "[AVISO] No es ARM â€” continÃºa igual si es tu VM"
 
-# â”€â”€ 2. Actualizar sistema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â”€â”€ 2. Actualizar sistema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Actualizando paquetes del sistema..."
 sudo apt-get update -qq
 sudo apt-get upgrade -y -qq
 ok "Sistema actualizado"
 
-# â”€â”€ 3. Instalar Python 3.11+ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── 3. Instalar Python 3.11+ ──────────────────────────────────────
+info "Asegurando dependencias base de Python (venv/pip)..."
+sudo apt-get install -y python3-venv python3-dev python3-pip -qq
+
 info "Verificando Python..."
 if ! python3 --version | grep -qE "3\.(11|12|13)"; then
     info "Instalando Python 3.11..."
-    sudo apt-get install -y python3.11 python3.11-venv python3.11-dev python3-pip -qq
+    sudo apt-get install -y python3.11 python3.11-venv python3.11-dev -qq
     sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
 fi
 ok "Python $(python3 --version)"
@@ -138,7 +141,7 @@ ok "Puerto 8001 abierto"
 info "Instalando y configurando Nginx..."
 sudo apt-get install -y nginx -qq
 sudo tee /etc/nginx/sites-available/valvic > /dev/null <<'NGINXEOF'
-# -- api.valvic.cl --- webhook 360dialog + JWT endpoints -------------------
+# -- api.valvic.cl --- webhook Meta Cloud API + JWT endpoints -------------------
 server {
     listen 80;
     server_name api.valvic.cl;
@@ -221,11 +224,11 @@ echo "     sudo systemctl start valvic-vicky"
 echo "     sudo systemctl enable valvic-vicky"
 echo "     sudo systemctl status valvic-vicky"
 echo ""
-echo "  5. Instalar SSL (obligatorio para 360dialog):"
+echo "  5. Instalar SSL (obligatorio para Meta Cloud API):"
 echo "     sudo apt install certbot python3-certbot-nginx -y"
 echo "     sudo certbot --nginx -d api.valvic.cl"
 echo ""
-echo "  6. Configurar webhook en 360dialog:"
+echo "  6. Configurar webhook en Meta Cloud API:"
 echo "     URL: https://api.valvic.cl/webhook/whatsapp"
 echo ""
 echo "  7. Primer prospector manual (prueba):"

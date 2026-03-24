@@ -8,7 +8,7 @@ Basado en el cerebro estratégico (`PROYECTO.md` y `ARQUITECTURA.md`) y el scrip
 
 1. **Crear la Máquina Virtual (VM Ampere):**
    - Ve a **Compute > Instances** y haz clic en "Create Instance".
-   - **Imagen:** Selecciona **Ubuntu 22.04 LTS**.
+   - **Imagen:** Selecciona **Ubuntu 24.04 LTS**.
    - **Shape (Hardware):** Cambia a `VM.Standard.A1.Flex` (Arquitectura ARM Ampere). Asigna **4 OCPUs** y **24 GB de RAM** (100% gratis en el Free Tier).
    - **Red:** Crea una nueva VCN y Subred Pública.
    - **Llaves SSH:** Genera o sube tu clave pública SSH (`.pub`) para poder conectarte después.

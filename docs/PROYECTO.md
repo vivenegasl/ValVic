@@ -62,7 +62,7 @@ Estas restricciones son NO NEGOCIABLES. Si una propuesta técnica viola cualquie
 - Dominio: valvic.cl | email: contacto@valvic.cl
 
 ### 2. Backend API — Oracle VM Ampere
-- 4 CPU, 24GB RAM, Ubuntu 22.04 LTS.
+- 4 CPU, 24GB RAM, Ubuntu 24.04 LTS.
 - Base de datos: MySQL HeatWave 50GB.
 - API: FastAPI (Python 3.11+).
 

@@ -34,10 +34,10 @@ Mapa rápido para entender la ubicación de los archivos y la lógica del sistem
 ## 🔌 APIs Externas Autorizadas
 - **Claude (Anthropic):** Modelos `sonnet` para lógica compleja y `haiku` para clasificación masiva.
 - **Google Places API v1:** Búsqueda avanzada de prospectos (vía `searchText` con FieldMasks).
-- **360dialog:** Canal oficial BSP para la API de WhatsApp Business.
+- **Meta WhatsApp Cloud API:** Canal oficial para la API de WhatsApp Business (Graph API v20.0).
 
 ## 🔗 Flujos Técnicos
-1. **Petición Cliente:** Entra por `360dialog`/`Meta API` -> Procesa en `FastAPI` (Oracle) -> Responde vía `Claude`.
+1. **Petición Cliente:** Entra por `Meta Cloud API` -> Procesa en `FastAPI` (Oracle) -> Responde vía `Claude` (Graph API v20.0).
 2. **Dashboard UI:** El usuario accede a `/panel/login.html` -> Consume `/api/auth/login` -> Se genera Cookie JWT (`HttpOnly`, `SameSite=Strict`) -> Carga `agenda.html` consumiendo rutas protegidas (`/api/agenda`, `/api/pacientes`) validadas vía `Depends(requiere_auth)`.
 3. **Onboarding:** El cliente vincula su número vía **Meta Embedded Signup** -> ValVic recibe `PhoneID` -> El sistema gestiona múltiples instancias de Vicky.
 4. **Estilo:** Carga dinámica de variables CSS en el `:root` de `panel.css`.
