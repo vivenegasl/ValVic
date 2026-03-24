@@ -18,18 +18,20 @@ Modos:
 
 import os
 import json
+import hmac
+import hashlib
 import sqlite3
 import asyncio
 import logging
 import argparse
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import httpx
 import anthropic
-from pydantic import BaseModel
-from fastapi import FastAPI, Request, BackgroundTasks, Response, HTTPException
+from pydantic import BaseModel, Field
+from fastapi import FastAPI, Request, BackgroundTasks, Response, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -46,11 +48,16 @@ from auth_panel import (
     RegisterInput,
     LoginInput,
     UsuarioPayload,
+    AuthRequired,
+    auth_router,
     create_jwt,
+    requiere_auth,
     extraer_usuario_de_cookie,
     registrar_usuario,
     autenticar_usuario,
     COOKIE_NAME,
+    _set_auth_cookie,
+    _delete_auth_cookie,
 )
 
 # ─── logging ─────────────────────────────────────────────────────────────────
@@ -63,9 +70,17 @@ log = logging.getLogger("vicky")
 
 # ─── credenciales ────────────────────────────────────────────────────────────
 ANTHROPIC_API_KEY  = os.getenv("ANTHROPIC_API_KEY", "")
+VALVIC_WHATSAPP    = os.getenv("VALVIC_WHATSAPP", "+56928417992")
+
+# ── Meta WhatsApp Cloud API ──
+META_ACCESS_TOKEN   = os.getenv("META_ACCESS_TOKEN", "")
+META_VERIFY_TOKEN   = os.getenv("META_VERIFY_TOKEN", "")
+META_APP_SECRET     = os.getenv("META_APP_SECRET", "")
+META_PHONE_NUMBER_ID = os.getenv("META_PHONE_NUMBER_ID", "")
+
+# ── Legado 360dialog (mantenido solo para compatibilidad transitoria) ──
 DIALOG360_API_KEY  = os.getenv("DIALOG360_API_KEY", "")
 DIALOG360_PHONE_ID = os.getenv("DIALOG360_PHONE_ID", "")
-VALVIC_WHATSAPP    = os.getenv("VALVIC_WHATSAPP", "+56928417992")
 
 # ─── MySQL (producción Oracle HeatWave) ─────────────────────────────────────
 USAR_MYSQL     = bool(os.getenv("MYSQL_HOST"))
@@ -79,6 +94,57 @@ MYSQL_DB       = os.getenv("MYSQL_DB", "valvic_db")
 claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 db     = SubagenteDB()
 app    = FastAPI(title="ValVic — Vicky")
+
+# Registrar router de autenticación JWT (/api/auth/*)
+app.include_router(auth_router)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  PYDANTIC v2 — MODELOS DE PAYLOAD META WHATSAPP CLOUD API
+#  Estructura oficial: entry[].changes[].value.messages[]
+# ════════════════════════════════════════════════════════════════════════════
+
+class MetaTextBody(BaseModel):
+    body: str = Field(..., description="Contenido del mensaje de texto")
+
+
+class MetaMessage(BaseModel):
+    id:        str
+    from_:     str = Field(..., alias="from")
+    timestamp: str
+    type:      str
+    text:      Optional[MetaTextBody] = None
+
+    model_config = {"populate_by_name": True}
+
+
+class MetaContact(BaseModel):
+    profile: Optional[dict] = None
+    wa_id:   str
+
+
+class MetaValue(BaseModel):
+    messaging_product: str
+    metadata:          Optional[dict]            = None
+    contacts:          Optional[List[MetaContact]] = None
+    messages:          Optional[List[MetaMessage]] = None
+    statuses:          Optional[List[dict]]      = None
+
+
+class MetaChange(BaseModel):
+    value: MetaValue
+    field: str
+
+
+class MetaEntry(BaseModel):
+    id:      str
+    changes: List[MetaChange]
+
+
+class MetaWebhookPayload(BaseModel):
+    """Raíz del JSON que Meta envía al POST /webhook/whatsapp."""
+    object:  str
+    entry:   List[MetaEntry]
 
 # ─── DB paths ────────────────────────────────────────────────────────────────
 CONV_DB   = Path("conversaciones.db")
@@ -666,70 +732,261 @@ async def _manejar_mensaje(telefono: str, mensaje: str):
 
 
 # ════════════════════════════════════════════════════════════════════════════
-#  ENVÍO WHATSAPP
+#  ENVÍO WHATSAPP — Meta Graph API v20.0
 # ════════════════════════════════════════════════════════════════════════════
 
 async def _enviar_whatsapp(telefono: str, mensaje: str) -> bool:
-    """Envía mensaje por 360dialog. Si no está configurado, solo loggea."""
-    if not DIALOG360_API_KEY:
-        log.info(f"[SIN 360DIALOG] → {telefono}: {mensaje[:80]}...")
+    """
+    Envía un mensaje de texto a través de la WhatsApp Cloud API de Meta.
+    Endpoint: POST https://graph.facebook.com/v20.0/{PHONE_NUMBER_ID}/messages
+    Header:   Authorization: Bearer {META_ACCESS_TOKEN}
+
+    Si META_ACCESS_TOKEN o META_PHONE_NUMBER_ID no están configurados,
+    el mensaje se imprime en los logs (útil en desarrollo/simulación).
+    """
+    if not META_ACCESS_TOKEN or not META_PHONE_NUMBER_ID:
+        log.info(f"[SIN META_API] → {telefono}: {mensaje[:80]}...")
         return False
 
-    tel = telefono.replace(" ", "").replace("-", "")
-    if not tel.startswith("+"):
-        tel = "+56" + tel.lstrip("0")
+    # Normalizar número: Meta necesita formato E.164 sin '+' (ej. "56912345678")
+    tel = (
+        telefono
+        .replace(" ", "")
+        .replace("-", "")
+        .lstrip("+")
+    )
+
+    url = f"https://graph.facebook.com/v20.0/{META_PHONE_NUMBER_ID}/messages"
+    payload = {
+        "messaging_product": "whatsapp",
+        "to":   tel,
+        "type": "text",
+        "text": {"body": mensaje},
+    }
 
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.post(
-                "https://waba.360dialog.io/v1/messages",
-                headers = {
-                    "D360-API-KEY": DIALOG360_API_KEY,
-                    "Content-Type": "application/json",
+                url,
+                headers={
+                    "Authorization": f"Bearer {META_ACCESS_TOKEN}",
+                    "Content-Type":  "application/json",
                 },
-                json    = {"to": tel, "type": "text", "text": {"body": mensaje}},
+                json    = payload,
                 timeout = 10,
             )
             resp.raise_for_status()
+            log.info(f"[META] Mensaje enviado a {telefono} — HTTP {resp.status_code}")
             return True
+    except httpx.HTTPStatusError as e:
+        log.error(
+            f"[META] Error HTTP al enviar a {telefono}: "
+            f"{e.response.status_code} — {e.response.text}"
+        )
+        return False
     except Exception as e:
-        log.error(f"Error enviando a {telefono}: {e}")
+        log.error(f"[META] Error inesperado al enviar a {telefono}: {e}")
+        return False
+
+
+async def _enviar_template_whatsapp(
+    telefono:      str,
+    template_name: str,
+    language_code: str = "es",
+    components:    Optional[list] = None,
+) -> bool:
+    """
+    Envía un mensaje de tipo 'template' (HSM) por la API de Meta.
+    Requerido para el primer mensaje en frío (message opener).
+    Solo se ejecuta previa aprobación humana (comando ENVIAR del fundador).
+    """
+    if not META_ACCESS_TOKEN or not META_PHONE_NUMBER_ID:
+        log.info(f"[SIN META_API] Template '{template_name}' a {telefono} — no enviado")
+        return False
+
+    tel = telefono.replace(" ", "").replace("-", "").lstrip("+")
+    url = f"https://graph.facebook.com/v20.0/{META_PHONE_NUMBER_ID}/messages"
+    payload: dict = {
+        "messaging_product": "whatsapp",
+        "to":   tel,
+        "type": "template",
+        "template": {
+            "name":     template_name,
+            "language": {"code": language_code},
+        },
+    }
+    if components:
+        payload["template"]["components"] = components
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                url,
+                headers={
+                    "Authorization": f"Bearer {META_ACCESS_TOKEN}",
+                    "Content-Type":  "application/json",
+                },
+                json    = payload,
+                timeout = 10,
+            )
+            resp.raise_for_status()
+            log.info(f"[META] Template '{template_name}' enviado a {telefono}")
+            return True
+    except httpx.HTTPStatusError as e:
+        log.error(
+            f"[META] Error HTTP en template a {telefono}: "
+            f"{e.response.status_code} — {e.response.text}"
+        )
+        return False
+    except Exception as e:
+        log.error(f"[META] Error inesperado en template a {telefono}: {e}")
         return False
 
 
 # ════════════════════════════════════════════════════════════════════════════
-#  WEBHOOK FASTAPI
+#  WEBHOOK FASTAPI — Meta WhatsApp Cloud API
 # ════════════════════════════════════════════════════════════════════════════
 
 @app.on_event("startup")
 async def startup():
     init_conv_db()
-    log.info("Vicky lista")
+    log.info("Vicky lista — Meta WhatsApp Cloud API activa")
 
+
+# ── Helpers de seguridad ──────────────────────────────────────────────────
+
+def _validar_firma_meta(body_bytes: bytes, signature_header: Optional[str]) -> bool:
+    """
+    Valida la firma HMAC-SHA256 que Meta incluye en el header
+    'X-Hub-Signature-256' con formato 'sha256=<hex_digest>'.
+
+    Retorna False si META_APP_SECRET no está configurado o si la firma
+    no coincide. Retorna True solo si la firma es criptográficamente válida.
+    """
+    if not META_APP_SECRET:
+        log.warning("META_APP_SECRET no configurado — omitiendo validación de firma")
+        return True   # Permisivo en desarrollo; en producción META_APP_SECRET es obligatorio
+
+    if not signature_header or not signature_header.startswith("sha256="):
+        return False
+
+    expected = hmac.HMAC(
+        META_APP_SECRET.encode("utf-8"),
+        body_bytes,
+        hashlib.sha256,
+    ).hexdigest()
+
+    received = signature_header[7:]   # strip "sha256=" prefix (7 chars)
+    return hmac.compare_digest(expected, received)
+
+
+# ── GET /webhook/whatsapp — Verificación de Meta ──────────────────────────
+
+@app.get("/webhook/whatsapp")
+async def webhook_verificacion(
+    hub_mode:         Optional[str] = Query(default=None, alias="hub.mode"),
+    hub_verify_token: Optional[str] = Query(default=None, alias="hub.verify_token"),
+    hub_challenge:    Optional[str] = Query(default=None, alias="hub.challenge"),
+):
+    """
+    Endpoint de verificación requerido por Meta para confirmar la URL del webhook.
+    Meta envía una petición GET con hub.mode='subscribe', hub.verify_token y
+    hub.challenge. El servidor debe responder con hub.challenge como entero
+    si el token es válido.
+
+    Docs: https://developers.facebook.com/docs/graph-api/webhooks/getting-started
+    """
+    log.info(
+        f"[META-Verify] mode={hub_mode} | "
+        f"token_ok={hub_verify_token == META_VERIFY_TOKEN}"
+    )
+
+    if hub_mode == "subscribe" and hub_verify_token == META_VERIFY_TOKEN:
+        try:
+            challenge_int = int(hub_challenge or "")
+        except ValueError:
+            log.error("[META-Verify] hub.challenge no es un entero válido")
+            raise HTTPException(status_code=400, detail="hub.challenge inválido")
+
+        log.info(f"[META-Verify] Verificación OK — devolviendo challenge {challenge_int}")
+        return Response(content=str(challenge_int), media_type="text/plain")
+
+    log.warning("[META-Verify] Token inválido o mode incorrecto — rechazado")
+    raise HTTPException(status_code=403, detail="Verificación fallida")
+
+
+# ── POST /webhook/whatsapp — Recepción de mensajes ────────────────────────
 
 @app.post("/webhook/whatsapp")
-async def webhook(request: Request, background: BackgroundTasks):
+async def webhook_recepcion(request: Request, background: BackgroundTasks):
     """
-    360dialog llama aquí en cada mensaje entrante.
-    El debounce se maneja en background para no bloquear el webhook.
+    Meta llama aquí cada vez que llega un mensaje, notificación de entrega
+    o cambio de estado.
+
+    Pipeline de seguridad:
+      1. Leer body raw (bytes) — necesario para calcular HMAC antes de parsear.
+      2. Validar firma X-Hub-Signature-256 con HMAC-SHA256 (META_APP_SECRET).
+      3. Parsear JSON a MetaWebhookPayload (Pydantic v2).
+      4. Extraer mensajes de texto y encolar con debounce.
+
+    Meta espera un 200 OK rápido; el procesamiento real va a background.
     """
+    # ── 1. Leer body crudo (antes de parsear) ────────────────────────────
     try:
-        data = await request.json()
-    except Exception:
-        return {"status": "ok"}
+        body_bytes = await request.body()
+    except Exception as e:
+        log.error(f"[META-POST] Error leyendo body: {e}")
+        return Response(content="ok", status_code=200)
 
-    for msg in data.get("messages", []):
-        if msg.get("type") != "text":
-            continue
-        telefono = msg.get("from", "")
-        texto    = msg.get("text", {}).get("body", "").strip()
-        if telefono and texto:
-            # Encolar con debounce — no esperar aquí
-            background.add_task(
-                lambda t=telefono, m=texto: encolar_mensaje(t, m)
-            )
+    # ── 2. Validar firma ─────────────────────────────────────────────────
+    signature = request.headers.get("X-Hub-Signature-256", "")
+    if not _validar_firma_meta(body_bytes, signature):
+        log.warning(
+            f"[META-POST] Firma inválida — posible request no autorizado. "
+            f"Header recibido: '{signature[:30]}...'"
+        )
+        raise HTTPException(status_code=403, detail="Firma inválida")
 
-    return {"status": "ok"}
+    # ── 3. Parsear payload ───────────────────────────────────────────────
+    try:
+        data = json.loads(body_bytes)
+        payload = MetaWebhookPayload.model_validate(data)
+    except Exception as e:
+        log.error(f"[META-POST] Error parseando payload: {e}")
+        return Response(content="ok", status_code=200)
+
+    # ── 4. Extraer y encolar mensajes ────────────────────────────────────
+    for entry in payload.entry:
+        for change in entry.changes:
+            if change.field != "messages":
+                continue
+
+            messages = change.value.messages or []
+            for msg in messages:
+                if msg.type != "text" or not msg.text:
+                    # Ignorar audio, imagen, sticker, etc. por ahora
+                    log.info(
+                        f"[META-POST] Tipo no soportado '{msg.type}' "
+                        f"de {msg.from_} — ignorado"
+                    )
+                    continue
+
+                telefono = msg.from_   # Formato E.164 sin '+' (ej. "56912345678")
+                texto    = msg.text.body.strip()
+
+                if not telefono or not texto:
+                    continue
+
+                log.info(
+                    f"[META-POST] Mensaje recibido de +{telefono}: "
+                    f"{texto[:60]}..."
+                )
+                # Encolar con debounce — no bloqueamos el webhook
+                background.add_task(
+                    lambda t=telefono, m=texto: encolar_mensaje(t, m)
+                )
+
+    return Response(content="ok", status_code=200)
 
 
 @app.get("/health")
@@ -762,13 +1019,13 @@ async def listar_conversaciones(activas_only: bool = True):
         """).fetchall()
     return {"conversaciones": [dict(r) for r in rows]}
 
-@app.post("/api/register", status_code=201)
-async def api_register(body: RegisterInput):
-    """
-    Registra un nuevo cliente/negocio en el panel.
-    Recibe: email, password, nombre_negocio.
-    Encripta la contraseña con bcrypt antes de guardar.
-    """
+# ── Rutas legacy de compatibilidad (redirigen a /api/auth/*) ─────────────────
+# Se mantienen para no romper el frontend existente que apunta a /api/login etc.
+# El canonical es /api/auth/* definido en auth_router.
+
+@app.post("/api/register", status_code=201, include_in_schema=False)
+async def api_register_legacy(body: RegisterInput):
+    """Legacy — usar POST /api/auth/register."""
     usuario = await registrar_usuario(
         email          = body.email,
         password       = body.password,
@@ -777,14 +1034,9 @@ async def api_register(body: RegisterInput):
     return {"ok": True, "id": usuario["id"], "nombre_negocio": usuario["nombre_negocio"]}
 
 
-@app.post("/api/login")
-async def api_login(body: LoginInput, response: Response):
-    """
-    Autentica al usuario y entrega una Cookie HttpOnly con el JWT.
-    - Verifica el password contra el hash bcrypt en la BD.
-    - El JWT incluye id, email y nombre_negocio en el payload.
-    - La cookie es HttpOnly + SameSite=Lax (Secure=True en producción HTTPS).
-    """
+@app.post("/api/login", include_in_schema=False)
+async def api_login_legacy(body: LoginInput, response: Response):
+    """Legacy — usar POST /api/auth/login."""
     usuario = await autenticar_usuario(body.email, body.password)
     if not usuario:
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
@@ -795,57 +1047,36 @@ async def api_login(body: LoginInput, response: Response):
         nombre_negocio = usuario["nombre_negocio"],
     )
     token = create_jwt(payload)
-
-    # Cookie HttpOnly: el JS del navegador NO puede leerla (protección XSS)
-    # SameSite=Lax: protege contra CSRF en la mayoría de los flujos
-    # Secure=True debería activarse cuando haya HTTPS (certbot)
-    is_https = os.getenv("ENVIRONMENT", "") == "production"
-    response.set_cookie(
-        key       = COOKIE_NAME,
-        value     = token,
-        httponly  = True,
-        samesite  = "lax",
-        secure    = is_https,
-        max_age   = 86400,   # 24 horas en segundos
-        path      = "/",
-    )
+    _set_auth_cookie(response, token)  # SameSite=Strict, centralizado en auth_panel
     return {"ok": True, "nombre_negocio": usuario["nombre_negocio"]}
 
 
-@app.get("/api/me")
-async def api_me(request: Request):
-    """
-    Valida la cookie JWT y retorna los datos del usuario autenticado.
-    Usado por el panel para confirmar la sesión al cargar la página.
-    Retorna 401 si la cookie no existe o el token es inválido/expirado.
-    """
-    usuario = extraer_usuario_de_cookie(request)
+@app.get("/api/me", include_in_schema=False)
+async def api_me_legacy(usuario: AuthRequired):
+    """Legacy — usar GET /api/auth/me."""
     return {"email": usuario.email, "nombre_negocio": usuario.nombre_negocio}
 
 
-@app.post("/api/logout")
-async def api_logout(response: Response):
-    """Invalida la sesión eliminando la cookie del cliente."""
-    response.delete_cookie(key=COOKIE_NAME, path="/")
+@app.post("/api/logout", include_in_schema=False)
+async def api_logout_legacy(response: Response):
+    """Legacy — usar POST /api/auth/logout."""
+    _delete_auth_cookie(response)
     return {"ok": True}
 
 
 @app.get("/api/agenda")
-async def api_agenda(request: Request):
+async def api_agenda(usuario: AuthRequired):
     """
-    CRÍTICO — Aislamiento total de datos (multi-tenancy):
+    GET /api/agenda — PROTEGIDO: requiere cookie JWT válida.
 
-    1. Extrae el usuario del JWT en la cookie (lanza 401 si inválido).
-    2. Filtra las reuniones/citas con WHERE usuario_id = <id_del_usuario_logueado>.
-       Es IMPOSIBLE que un cliente vea datos de otro negocio.
+    Aislamiento total de datos (multi-tenancy):
+    - El usuario se extrae del JWT vía Depends(requiere_auth) — 401 si inválido.
+    - WHERE usuario_id = <id_jwt>: imposible ver datos de otro negocio.
 
-    En modo SQLite (local): filtra conversaciones con reunion_agendada=1.
-    En modo MySQL (producción): usa la vista v_agenda_panel con filtro estricto.
+    MySQL (producción): usa vista v_agenda_panel con filtro usuario_id.
+    SQLite (desarrollo): conversaciones con reunion_agendada=1.
     """
-    usuario = extraer_usuario_de_cookie(request)   # 401 si no autenticado
-
     if USAR_MYSQL:
-        # ── Producción: Vista v_agenda_panel + WHERE usuario_id ──────────
         try:
             import aiomysql
             conn = await aiomysql.connect(
@@ -873,9 +1104,7 @@ async def api_agenda(request: Request):
             log.error(f"/api/agenda MySQL error: {e}")
             raise HTTPException(status_code=500, detail="Error al obtener agenda")
     else:
-        # ── Desarrollo: SQLite — devuelve conversaciones del usuario ──────
-        # En local, todas las conversaciones son del primer usuario (fundador/dev).
-        # La columna usuario_id puede no existir aún en SQLite — usamos fallback.
+        # Desarrollo SQLite — sin restricción multi-tenant real
         with sqlite3.connect(CONV_DB) as conn:
             conn.row_factory = sqlite3.Row
             try:
@@ -892,7 +1121,6 @@ async def api_agenda(request: Request):
                     (usuario.id,),
                 ).fetchall()
             except sqlite3.OperationalError:
-                # Columna usuario_id no existe aún → fallback sin filtro
                 rows = conn.execute(
                     """
                     SELECT telefono, etapa, servicio_acordado,
@@ -903,6 +1131,66 @@ async def api_agenda(request: Request):
                     """
                 ).fetchall()
         return {"citas": [dict(r) for r in rows], "negocio": usuario.nombre_negocio}
+
+
+@app.get("/api/pacientes")
+async def api_pacientes(usuario: AuthRequired):
+    """
+    GET /api/pacientes — PROTEGIDO: requiere cookie JWT válida.
+
+    Retorna la lista de pacientes vinculados al cliente (negocio) autenticado.
+    Aislamiento estricto por cliente_id derivado del JWT.
+
+    MySQL (producción): tabla pacientes JOIN clientes JOIN contratos.
+    SQLite (desarrollo): no existe tabla pacientes — retorna lista vacía.
+    """
+    if USAR_MYSQL:
+        try:
+            import aiomysql
+            conn = await aiomysql.connect(
+                host=MYSQL_HOST, port=MYSQL_PORT,
+                user=MYSQL_USER, password=MYSQL_PASSWORD,
+                db=MYSQL_DB, charset="utf8mb4",
+            )
+            async with conn.cursor(aiomysql.DictCursor) as cur:
+                # Obtener el cliente_id asociado al usuario del panel
+                await cur.execute(
+                    """
+                    SELECT p.id, p.nombre, p.telefono, p.email, p.notas,
+                           p.created_at
+                    FROM   pacientes p
+                    JOIN   contratos con ON con.cliente_id = p.cliente_id
+                    JOIN   usuarios_panel up ON up.id = %s
+                    WHERE  p.cliente_id = (
+                               SELECT cliente_id
+                               FROM   usuarios_panel
+                               WHERE  id = %s
+                               LIMIT  1
+                           )
+                    ORDER  BY p.nombre ASC
+                    LIMIT  200
+                    """,
+                    (usuario.id, usuario.id),
+                )
+                rows = await cur.fetchall()
+            conn.close()
+            return {
+                "pacientes": [dict(r) for r in rows],
+                "total":     len(rows),
+                "negocio":   usuario.nombre_negocio,
+            }
+        except Exception as e:
+            log.error(f"/api/pacientes MySQL error: {e}")
+            raise HTTPException(status_code=500, detail="Error al obtener pacientes")
+    else:
+        # SQLite de desarrollo — tabla pacientes no existe en dev local
+        log.info("/api/pacientes: modo SQLite dev — sin datos de pacientes")
+        return {
+            "pacientes": [],
+            "total":     0,
+            "negocio":   usuario.nombre_negocio,
+            "nota":      "Entorno de desarrollo — los pacientes se sirven desde MySQL en producción",
+        }
 
 
 

@@ -15,65 +15,14 @@
 </head>
 <body>
 
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-glow" id="sidebar-glow"></div>
-        <a href="https://valvic.cl" class="brand" aria-label="ValVic inicio">
-            <img src="favicon-180-transparent.png" alt="ValVic" class="brand-icon" width="30" height="30" loading="lazy">
-            ValVic
-        </a>
-
-        <nav class="nav-menu" role="navigation" aria-label="Menú principal">
-            <a href="agenda.html" class="nav-link" id="nav-dashboard" aria-label="Dashboard">
-                <i class="ph ph-squares-four nav-icon" aria-hidden="true"></i>
-                Dashboard
-            </a>
-            <a href="agenda.html" class="nav-link active" aria-current="page" aria-label="Agenda de citas">
-                <i class="ph ph-calendar-blank nav-icon" aria-hidden="true"></i>
-                Agenda / Citas
-            </a>
-            <a href="pacientes.html" class="nav-link" aria-label="CRM de clientes">
-                <i class="ph ph-users nav-icon" aria-hidden="true"></i>
-                Clientes CRM
-            </a>
-            <a href="configuracion.html" class="nav-link" aria-label="Configuración de IA Vicky">
-                <i class="ph ph-robot nav-icon" aria-hidden="true"></i>
-                IA de Vicky
-            </a>
-            <div class="nav-spacer"></div>
-            <a href="configuracion.html" class="nav-link nav-link--muted" aria-label="Configuración">
-                <i class="ph ph-gear nav-icon" aria-hidden="true"></i>
-                Configuración
-            </a>
-            <button class="nav-link nav-link--muted nav-btn-logout" id="btn-logout" type="button" aria-label="Cerrar sesión">
-                <i class="ph ph-sign-out nav-icon" aria-hidden="true"></i>
-                Cerrar Sesión
-            </button>
-        </nav>
-    </aside>
-
-    <!-- Overlay para sidebar mobile -->
-    <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+    <!-- SIDEBAR via Web Component -->
+    <sidebar-nav></sidebar-nav>
 
     <!-- ═══ ESCRITORIO PRINCIPAL ═══ -->
     <main class="desk" role="main">
 
-        <!-- TOPBAR -->
-        <header class="topbar">
-            <!-- Botón hamburguesa (solo mobile) -->
-            <button class="topbar-menu-btn" id="btn-menu" type="button" aria-label="Abrir menú">
-                <i class="ph ph-list" aria-hidden="true"></i>
-            </button>
-
-            <h1 class="topbar-title" id="topbar-negocio">Panel ValVic</h1>
-
-            <div class="user-profile">
-                <div class="user-info">
-                    <span class="user-name" id="user-display-name">Cargando…</span>
-                    <span class="user-role">Administrador</span>
-                </div>
-                <div class="user-avatar" id="user-avatar" aria-hidden="true">VV</div>
-            </div>
-        </header>
+        <!-- TOPBAR via Web Component -->
+        <topbar-header title="Panel ValVic"></topbar-header>
 
         <!-- ÁREA SCROLLABLE -->
         <div class="content-scroll">
@@ -150,6 +99,10 @@
 
         </div>
     </main>
+
+    <!-- Components JS -->
+    <script src="js/components/sidebar-nav.js"></script>
+    <script src="js/components/topbar-header.js"></script>
 
     <!-- JS externo (cumple CSP 'self') -->
     <script src="js/agenda.js"></script>

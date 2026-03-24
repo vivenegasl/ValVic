@@ -138,6 +138,20 @@ AS new ON DUPLICATE KEY UPDATE nombre=new.nombre;
 --  ENTIDADES CORE
 -- ================================================================
 
+CREATE TABLE usuarios_panel (
+  id             CHAR(36)     PRIMARY KEY DEFAULT (UUID()),
+  email          VARCHAR(255) NOT NULL UNIQUE,
+  password_hash  VARCHAR(255) NOT NULL,
+  nombre_negocio VARCHAR(200) NOT NULL,
+  nombre         VARCHAR(150),
+  rol            VARCHAR(50)  NOT NULL DEFAULT 'operador',
+  activo         BOOLEAN      NOT NULL DEFAULT TRUE,
+  ultimo_acceso  DATETIME,
+  cliente_id     CHAR(36),
+  created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE SET NULL
+);
+
 CREATE TABLE clientes (
   id              CHAR(36)    PRIMARY KEY DEFAULT (UUID()),
   created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -1,210 +1,86 @@
-# INSTALACION.md — ValVic
+# Guía de Despliegue en Oracle Cloud (ValVic)
 
-> Guía paso a paso para instalar y arrancar el sistema en producción (Oracle VM) y en local (SQLite).
+¡Felicidades por registrarte en Oracle Cloud! 
+
+Basado en el cerebro estratégico (`PROYECTO.md` y `ARQUITECTURA.md`) y el script automatizado existente en tu repositorio (`setup_oracle.sh`), aquí tienes el paso a paso exacto para desplegar toda la infraestructura:
+
+## Fase 1: Creación de Recursos (Consola de Oracle)
+
+1. **Crear la Máquina Virtual (VM Ampere):**
+   - Ve a **Compute > Instances** y haz clic en "Create Instance".
+   - **Imagen:** Selecciona **Ubuntu 22.04 LTS**.
+   - **Shape (Hardware):** Cambia a `VM.Standard.A1.Flex` (Arquitectura ARM Ampere). Asigna **4 OCPUs** y **24 GB de RAM** (100% gratis en el Free Tier).
+   - **Red:** Crea una nueva VCN y Subred Pública.
+   - **Llaves SSH:** Genera o sube tu clave pública SSH (`.pub`) para poder conectarte después.
+
+2. **Abrir Puertos en Oracle (Security Lists):**
+   - Ve a **Networking > Virtual Cloud Networks**. 
+   - Entra a tu VCN > *Security Lists* > *Default Security List*.
+   - Añade *Ingress Rules* (Reglas de entrada) para:
+     - **Puerto 80** (HTTP) — Origen: `0.0.0.0/0`
+     - **Puerto 443** (HTTPS) — Origen: `0.0.0.0/0`
+
+3. **Crear la Base de Datos (MySQL HeatWave):**
+   - Ve a **Databases > MySQL**.
+   - Crea un nuevo sistema de DB (en la misma VCN de tu VM).
+   - Crea un usuario administrador (ej. `valvic_app`) y anota la contraseña.
+   - Anota la **Dirección IP Privada** que Oracle le asigne a la base de datos.
 
 ---
 
-## Requisitos previos
+## Fase 2: Configuración del Servidor (Vía Terminal)
 
-- Python 3.11+
-- Oracle VM con Ubuntu 22.04 (o entorno local para pruebas con SQLite)
-- Claves API: Anthropic (obligatoria), Google Places (opcional), 360dialog (cuando Oracle esté activo)
-
----
-
-## 1. Preparar el entorno
-
+Desde tu computador, conéctate a la VM por SSH usando la IP Pública que te asignó Oracle:
 ```bash
-# Crear entorno virtual
-python3 -m venv venv
-source venv/bin/activate   # Linux/Mac
-# venv\Scripts\activate   # Windows
-
-# Instalar dependencias
-pip install -r requirements.txt
+ssh -i "ruta/a/tu_llave_privada" ubuntu@<IP_PUBLICA_DE_VM>
 ```
 
----
-
-## 2. Configurar variables de entorno
-
+1. **Clonar el Repositorio de ValVic:**
+Como en el paso anterior limpiamos y dejamos perfecto el repo en GitHub, descárgalo allí:
 ```bash
-cp .env.example .env
-nano .env   # Completar con tus valores reales
+git clone https://github.com/vivenegasl/ValVic.git
+cd ValVic
 ```
 
-**Mínimo para correr en local (SQLite):**
-```
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-**Producción completa (MySQL + WhatsApp):**
-```
-MYSQL_HOST=<host Oracle HeatWave>
-MYSQL_PORT=3306
-MYSQL_USER=valvic_app
-MYSQL_PASSWORD=<password>
-MYSQL_DB=valvic_db
-DIALOG360_API_KEY=<key>
-DIALOG360_PHONE_ID=<phone id>
-GOOGLE_PLACES_API_KEY=<key>
-VALVIC_WHATSAPP=56928417992
-```
-
----
-
-## 3. Estructura de carpetas
-
-```
-Valvic/
-├── Agentes/
-│   ├── agente_conversacion.py    ← Vicky (webhook + ventas)
-│   ├── subagente_db.py           ← Persistencia SQLite/MySQL
-│   ├── prompts_ventas.py         ← Prompts y precios por vertical
-│   ├── prospector.py             ← Prospector multi-vertical
-│   └── actualizar_openers.py     ← Regenera mensajes opener
-├── verticals/
-│   ├── dental.yaml, veterinarias.yaml, spa.yaml
-│   ├── psicologos.yaml, estetica.yaml, gimnasios.yaml
-│   ├── inmobiliarias.yaml, mueblerias.yaml
-├── sql/
-│   ├── schema_prospeccion_mysql.sql  ← Ejecutar en Oracle ✅
-│   ├── valvic_schema_principal.sql   ← Pendiente conversión PG→MySQL
-│   └── valvic_schema_reportes.sql    ← Pendiente conversión PG→MySQL
-├── ValVic Web/                       ← Frontend valvic.cl
-├── Estructuras/                      ← Código legado (Sheets)
-├── requirements.txt
-├── setup_oracle.sh
-├── .env.example
-└── PROYECTO (1).md
-```
-
----
-
-## 4. Inicializar base de datos
-
-### Local (SQLite — para pruebas)
-
+2. **Ejecutar el Script Automático:**
+El comando `setup_oracle.sh` configurará automáticamente Python 3.11, entornos virtuales, Nginx para proxy reverso y servicios SystemD.
 ```bash
-cd Agentes
-python3 -c "from subagente_db import SubagenteDB; db = SubagenteDB(); db.init(); print(db.resumen())"
-```
-
-Crea `prospectos_vet.db` automáticamente.
-
-### Producción (MySQL en Oracle HeatWave)
-
-```bash
-# Asegúrate que MYSQL_* están en .env
-mysql -h $MYSQL_HOST -u valvic_app -p $MYSQL_DB < sql/schema_prospeccion_mysql.sql
-
-# Verificar
-python3 -c "from subagente_db import SubagenteDB; db = SubagenteDB(); db.init(); print(db.backend, db.resumen())"
-```
-
----
-
-## 5. Verificar verticales disponibles
-
-```bash
-cd Agentes
-python3 prospector.py --listar-verticales
-```
-
-Debe mostrar los 8 verticales: `dental`, `veterinarias`, `spa`, `psicologos`, `estetica`, `gimnasios`, `inmobiliarias`, `mueblerias`.
-
----
-
-## 6. Primera ejecución — modo test (sin enviar mensajes)
-
-```bash
-cd Agentes
-
-# Sin Google Places API (Claude genera lista de negocios ficticios para prueba)
-python3 prospector.py --vertical dental --ciudad Santiago --cantidad 10 --test
-
-# Revisar prospectos generados
-python3 prospector.py --vertical dental --solo-revisar
-
-# Exportar CSV con links wa.me precompletados
-python3 prospector.py --vertical dental --solo-exportar
-```
-
----
-
-## 7. Probar el agente de ventas (simulación)
-
-```bash
-cd Agentes
-python3 agente_conversacion.py --simular --telefono "+56912345678"
-```
-
-Inicia conversación simulada con Vicky sin enviar mensajes reales por WhatsApp.
-
----
-
-## 8. Despliegue en Oracle VM (producción)
-
-```bash
-# Correr el script de instalación automatizada
 chmod +x setup_oracle.sh
 ./setup_oracle.sh
-
-# El script hace:
-# 1. Actualiza Ubuntu
-# 2. Instala Python 3.11+
-# 3. Crea entorno virtual en /opt/valvic/venv
-# 4. Copia archivos a /opt/valvic/app
-# 5. Instala dependencias
-# 6. Configura systemd (valvic-vicky.service)
-# 7. Configura cron jobs (prospector lunes 9am, openers 9:30am)
-# 8. Instala y configura Nginx como reverse proxy
 ```
 
 ---
 
-## 9. Activar webhook 360dialog
+## Fase 3: Pasos Manuales Post-Instalación
 
+El script copiará el proyecto a `/opt/valvic/app`. Para finalizar, debes hacer lo siguiente:
+
+1. **Configurar Credenciales (.env):**
 ```bash
-# 1. Instalar SSL (obligatorio para 360dialog)
-sudo apt install certbot python3-certbot-nginx -y
-sudo certbot --nginx -d api.valvic.cl
+nano /opt/valvic/app/.env
+```
+   Aquí deberás colocar tus tokens reales de Anthropic, Meta API (o 360dialog), Google Places, y configurar `MYSQL_HOST` con la IP Privada de la BD del Paso 1, junto al usuario y contraseña.
 
-# 2. Iniciar servicio Vicky
+2. **Cargar la Base de Datos (Esquema MySQL):**
+Ejecuta los schemas que migramos en sesiones anteriores hacia MySQL:
+```bash
+mysql -h <IP_PRIVADA_MYSQL> -u valvic_app -p < /opt/valvic/app/Database/valvic_schema_principal_mysql.sql
+mysql -h <IP_PRIVADA_MYSQL> -u valvic_app -p < /opt/valvic/app/Database/valvic_schema_reportes_mysql.sql
+```
+
+3. **Iniciar a Vicky (FastAPI):**
+Levanta el servicio web que procesará los mensajes:
+```bash
 sudo systemctl start valvic-vicky
 sudo systemctl enable valvic-vicky
-sudo systemctl status valvic-vicky
-
-# 3. Verificar health check
-curl https://api.valvic.cl/health
-
-# 4. En el panel de 360dialog:
-#    Webhook URL = https://api.valvic.cl/webhook/whatsapp
 ```
 
----
-
-## 10. Agregar un nuevo vertical
-
+4. **Seguridad SSL (Obligatorio para WhatsApp):**
+Asegúrate de que en tu gestor de dominios (ej. Hostinger) el subdominio `api.valvic.cl` apunte a la IP Pública de tu VM. Luego corre Certbot:
 ```bash
-# Copiar el YAML de un vertical similar como base
-cp verticals/dental.yaml verticals/fisioterapia.yaml
-
-# Editar con los datos del nuevo vertical
-nano verticals/fisioterapia.yaml
-
-# Verificar que aparece
-python3 Agentes/prospector.py --listar-verticales
-
-# Prospectar (cero cambios de código)
-python3 Agentes/prospector.py --vertical fisioterapia --ciudad Santiago --cantidad 10 --test
+sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d api.valvic.cl
 ```
 
----
-
-## Notas de seguridad
-
-- **Nunca commitear:** `.env`, `*.db`, `*.pem`, `google_credentials.json`
-- El `.env.example` **sí va al repo** (sin valores reales)
-- Revisar `.gitignore` antes de cada `git push`
-- En producción, usar variables de entorno del sistema — no `.env` en el servidor
+Una vez terminado, tu IA estará lista para recibir mensajes en:
+👉 `https://api.valvic.cl/webhook/whatsapp`

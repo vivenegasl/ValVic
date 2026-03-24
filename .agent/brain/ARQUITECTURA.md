@@ -10,8 +10,9 @@ Mapa rápido para entender la ubicación de los archivos y la lógica del sistem
 
 ### 2. `/Panel` (App de Clientes)
 - Panel administrativo independiente.
-- `/css` y `/js`: Recursos exclusivos del dashboard.
-- `login.html`, `agenda.html`: Interfaces funcionales.
+- `/css` y `/js`: Recursos exclusivos del dashboard y lógica Vanilla JS.
+- `/js/components`: Arquitectura web basada en **Web Components nativos** con Shadow DOM (`<sidebar-nav>`, `<topbar-header>`).
+- `login.html`, `agenda.html`: Interfaces funcionales modulares sin HTML duplicado.
 
 ### 3. `/Agentes` (Backend IA)
 - `agente_conversacion.py`: Lógica de interacción Claude/Vicky.
@@ -37,6 +38,6 @@ Mapa rápido para entender la ubicación de los archivos y la lógica del sistem
 
 ## 🔗 Flujos Técnicos
 1. **Petición Cliente:** Entra por `360dialog`/`Meta API` -> Procesa en `FastAPI` (Oracle) -> Responde vía `Claude`.
-2. **Dashboard UI:** El usuario accede a `/panel/login.html` -> Valida credenciales -> Carga `agenda.html`.
+2. **Dashboard UI:** El usuario accede a `/panel/login.html` -> Consume `/api/auth/login` -> Se genera Cookie JWT (`HttpOnly`, `SameSite=Strict`) -> Carga `agenda.html` consumiendo rutas protegidas (`/api/agenda`, `/api/pacientes`) validadas vía `Depends(requiere_auth)`.
 3. **Onboarding:** El cliente vincula su número vía **Meta Embedded Signup** -> ValVic recibe `PhoneID` -> El sistema gestiona múltiples instancias de Vicky.
 4. **Estilo:** Carga dinámica de variables CSS en el `:root` de `panel.css`.

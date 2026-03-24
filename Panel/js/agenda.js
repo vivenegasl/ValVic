@@ -88,14 +88,28 @@
       const data = await res.json();
       const nombre = data.nombre_negocio || data.email || "Panel ValVic";
 
-      // Inyectar nombre del negocio en el header (confirmación visual del contexto)
-      const topbarTitle = document.getElementById("topbar-negocio");
-      if (topbarTitle) topbarTitle.textContent = nombre;
+      let topbarTitle = document.getElementById("topbar-negocio");
+      let displayName = document.getElementById("user-display-name");
+      let avatar = document.getElementById("user-avatar");
 
-      const displayName = document.getElementById("user-display-name");
+      const topbarComp = document.querySelector("topbar-header");
+      if (topbarComp && topbarComp.shadowRoot) {
+        topbarTitle = topbarTitle || topbarComp.shadowRoot.getElementById("topbar-negocio");
+        displayName = displayName || topbarComp.shadowRoot.getElementById("user-display-name");
+        avatar = avatar || topbarComp.shadowRoot.getElementById("user-avatar");
+      }
+
+      // Inyectar nombre del negocio en el header (confirmación visual del contexto)
+      if (topbarTitle) {
+
+        // Check if there is a slot being used or if we can replace textContent safely
+        // But since we may just overwrite the fallback node of the slot, we should select the slot if present 
+        // Or if topbarTitle is the slot fallback parent, we can just replace textContent of the slot or the node
+        topbarTitle.textContent = nombre;
+      }
+
       if (displayName) displayName.textContent = nombre;
 
-      const avatar = document.getElementById("user-avatar");
       if (avatar) {
         // Iniciales del nombre para el avatar
         const parts = nombre.split(" ");

@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 # ================================================================
 #  ValVic â€” Setup automatizado en Oracle VM
 #  Ejecutar UNA SOLA VEZ como usuario ubuntu en la VM
@@ -122,10 +122,12 @@ info "Configurando cron jobs..."
 (crontab -l 2>/dev/null; echo "0 9 * * 1 cd /opt/valvic/app && /opt/valvic/venv/bin/python prospector.py --vertical veterinarias --ciudad 'Santiago' --cantidad 50 >> /var/log/valvic/prospector.log 2>&1") | crontab -
 (crontab -l 2>/dev/null; echo "# ValVic â€” Actualizar openers (lunes 9:30am, despuÃ©s del prospector)") | crontab -
 (crontab -l 2>/dev/null; echo "30 9 * * 1 cd /opt/valvic/app && /opt/valvic/venv/bin/python actualizar_openers.py --cantidad 50 >> /var/log/valvic/openers.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "# ValVic â€” Backup MySQL â†’ OCI Object Storage (3 AM diario)") | crontab -
+(crontab -l 2>/dev/null; echo "0 3 * * * /opt/valvic/venv/bin/python /opt/valvic/app/backup_mysql.py >> /var/log/valvic/backup.log 2>&1") | crontab -
 
 mkdir -p /var/log/valvic
 sudo chown ubuntu:ubuntu /var/log/valvic
-ok "Cron jobs configurados"
+ok "Cron jobs configurados (prospector + openers + backup 3 AM)"
 
 # â”€â”€ 11. Configurar firewall (Oracle tiene su propio security list) â”€
 info "Abriendo puerto 8001 en firewall local (Ubuntu)..."
