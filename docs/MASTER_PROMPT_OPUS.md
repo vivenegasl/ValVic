@@ -10,8 +10,7 @@
 Antes de responder, lee los siguientes archivos en este repositorio:
 - `README.md`: Estructura del proyecto y Reglas de Memoria.
 - `docs/PROYECTO.md`: Bases técnicas y no negociables.
-- `.agent/brain/REGLAS_ESTILO.md`: Estándares Senior.
-- `.agent/brain/ARQUITECTURA.md`: Mapa de directorios (`Landing`, `Panel`, `Agentes`, `Database`).
+- `.agent/brain`: Cerebro del sistema.
 - `docs/MIGRACION_META_API.md`: Plan técnico Meta API.
 - `docs/ONBOARDING_CLIENTES.md`: Estrategia de clientes finales.
 - `docs/task.md`: Roadmap actualizado.
