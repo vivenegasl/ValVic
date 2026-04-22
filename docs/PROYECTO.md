@@ -31,7 +31,7 @@ Estas restricciones son NO NEGOCIABLES. Si una propuesta técnica viola cualquie
 
 **Seguridad (NUEVO):**
 - **Autenticación:** Todo panel (`/panel`) requiere validación vía JWT usando cookies `HttpOnly` y `Secure`.
-- **Webhooks:** Todo Request a `/webhook/whatsapp` DEBE validar el header/firma criptográfica de 360dialog para prevenir inyecciones.
+- **Webhooks:** Todo Request a `/webhook/whatsapp` DEBE validar el header `X-Hub-Signature-256` de Meta para prevenir inyecciones.
 - **Backups:** Un script en `cron` diario (3 AM) debe hacer `mysqldump` y enviarlo de forma encriptada a Oracle Object Storage.
 
 **Regla de Negocio sobre Modelos de Agentes:**
@@ -48,7 +48,7 @@ Estas restricciones son NO NEGOCIABLES. Si una propuesta técnica viola cualquie
 | Python + FastAPI | SDK Anthropic es Python-primero; I/O bound puro; ideal para Dev Solitario. |
 | HTML/CSS/JS puro | Políticas CSP estrictas; cero dependencias; despliegue drag-and-drop en Hostinger. |
 | Python directo para crons | Sin vendor lock-in; permite lógica compleja e inyección de DB gratis. |
-| 360dialog para WhatsApp | Uso Oficial BSP. Baileys viola ToS y arriesga baneo permanente. |
+| Meta WhatsApp Cloud API (Graph v20.0) | Uso Oficial directo de Meta. |
 | Pydantic v2 | Validación estricta en runtime y de-serialización. |
 | Config vertical YAML | Agregar un rubro nuevo exige CERO cambios de código. Todo se lee dinámicamente. |
 
@@ -69,7 +69,7 @@ Estas restricciones son NO NEGOCIABLES. Si una propuesta técnica viola cualquie
 ### 3. APIs Externas Autorizadas
 - **Claude:** `claude-sonnet` (texto persuasivo) y `claude-haiku-3-5` (clasificación batch).
 - **Google Places API v1 (Nueva):** Endpoint `places:searchText` con FieldMasks en JSON para buscar prospectos. (NO la antigua versión legacy /textsearch).
-- **WhatsApp API:** 360dialog Oficial (requiere uso de tipo `template` para los message openers).
+- **WhatsApp Cloud API:** Meta directo (Graph API v20.0) (requiere uso de tipo `template` para los message openers).
 
 ---
 
@@ -90,7 +90,7 @@ Antes de programar un agente, escribir y documentar el flujo dictado por el Meta
 2. **Tools:** Lista exacta de funciones a las que tiene acceso. 
 3. **Pydantic Schemas:** Definir un In/Out strict output.
 4. **Manejo de Errores:** ¿Reintenta backoff exponencial o aborta?
-5. **Testing:** Proceso en aislamiento (simulación `--test` CLI) antes de exponerlo a 360dialog.
+5. **Testing:** Proceso en aislamiento (simulación `--test` CLI) antes de exponerlo a producción (Meta Cloud API).
 
 ---
-> **Nota para IAs:** Los estados de las tareas pendientes residen en `task.md`. Los precios y la estrategia de ventas comercial residen en `VENTAS.md`. El inventario de archivos en `README.md`. No dupliques esa información aquí.
+> **Nota para IAs:** Los estados de las tareas pendientes residen en `ROADMAP.md`. Los precios y la estrategia de ventas comercial residen en `VENTAS.md`. El inventario de archivos en `README.md`. No dupliques esa información aquí.

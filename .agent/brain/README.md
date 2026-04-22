@@ -4,8 +4,12 @@ Este directorio sirve como la "memoria compartida" del proyecto. Cualquier IA qu
 
 ## Estructura de Memoria
 - [ESTADO_ACTUAL.md](./ESTADO_ACTUAL.md): Resumen de lo último implementado y tareas pendientes.
-- [REGLAS_ESTILO.md](./REGLAS_ESTILO.md): Guía estricta de desarrollo (basada en PROJECTO.MD).
+- [REGLAS_ESTILO.md](./REGLAS_ESTILO.md): Guía estricta de desarrollo (basada en `docs/PROYECTO.md`).
 - [ARQUITECTURA.md](./ARQUITECTURA.md): Mapa técnico de rutas, archivos y dependencias.
-- [HISTORIAL_CAMBIOS.md](./HISTORIAL_CAMBIOS.md): Bitácora de decisiones críticas tomadas en sesiones previas.
+
+## Documentación del Proyecto
+- `docs/PROYECTO.md`: Constitución técnica y reglas de oro.
+- `docs/ROADMAP.md`: Tareas pendientes por fase.
+- `docs/VENTAS.md`: Precios, verticales y estrategia comercial.
 
 > **Instrucción para el Agente:** Siempre lee este directorio al iniciar una sesión para alinearte con el "Master Brain" de ValVic.

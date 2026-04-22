@@ -58,12 +58,12 @@
             <section aria-labelledby="integraciones-heading">
                 <div class="settings-card">
                     <h3 id="integraciones-heading">Integraciones</h3>
-                    <p>Conecta la API de 360dialog y sistemas de facturación/calendario</p>
+                    <p>Conexión con Meta WhatsApp Cloud API y sistemas de facturación/calendario</p>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label" for="api-key-360">360dialog API KEY (WhatsApp)</label>
-                            <input type="password" id="api-key-360" value="**************">
+                            <label class="form-label" for="meta-api-status">Estado Meta WhatsApp Business</label>
+                            <input type="text" id="meta-api-status" value="Conectado vía Meta Cloud API" readonly>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="webhook-url">Webhook URL (Retorno)</label>
@@ -72,9 +72,9 @@
                         </div>
                     </div>
 
-                    <button class="btn-primary" type="button">
+                    <button class="btn-primary" type="button" disabled>
                         <i class="ph ph-plug" aria-hidden="true"></i>
-                        Vincular 360dialog
+                        Estado de la API
                     </button>
                 </div>
             </section>

@@ -78,9 +78,7 @@ META_VERIFY_TOKEN   = os.getenv("META_VERIFY_TOKEN", "")
 META_APP_SECRET     = os.getenv("META_APP_SECRET", "")
 META_PHONE_NUMBER_ID = os.getenv("META_PHONE_NUMBER_ID", "")
 
-# ── Legado 360dialog (mantenido solo para compatibilidad transitoria) ──
-DIALOG360_API_KEY  = os.getenv("DIALOG360_API_KEY", "")
-DIALOG360_PHONE_ID = os.getenv("DIALOG360_PHONE_ID", "")
+
 
 # ─── MySQL (producción Oracle HeatWave) ─────────────────────────────────────
 USAR_MYSQL     = bool(os.getenv("MYSQL_HOST"))
@@ -490,32 +488,31 @@ def agendar_reunion_fundador(
         return {"ok": False, "error": str(e)}
 
 
-def notificar_fundador(tipo: str, datos: dict):
+async def notificar_fundador(tipo: str, datos: dict):
     """
-    Notifica al fundador sobre eventos importantes.
-    Por ahora: logging. Cuando 360dialog esté activo: WhatsApp al fundador.
-    Cuando Oracle esté activo: registro en MySQL + posiblemente email.
+    Notifica al fundador sobre eventos importantes vía WhatsApp (Meta Graph API).
     """
     if tipo == "cierre":
-        log.info(
-            f"CIERRE: {datos.get('nombre_negocio')} | "
-            f"{datos.get('servicio_acordado')} | "
-            f"${datos.get('precio_mensual_usd')}/mes | "
-            f"Forma de pago: {datos.get('forma_pago', 'por definir')}"
+        texto = (
+            f"🎉 CIERRE: {datos.get('nombre_negocio')} "
+            f"contrató {datos.get('servicio_acordado')} "
+            f"a ${datos.get('precio_mensual_usd')}/mes"
         )
     elif tipo == "escalado":
-        log.info(
-            f"ESCALADO: {datos.get('nombre_negocio')} ({datos.get('telefono')}) | "
-            f"Motivo: {datos.get('motivo')}"
+        texto = (
+            f"⚠️ ESCALADO: {datos.get('nombre_negocio')} "
+            f"pide hablar con humano ({datos.get('motivo')})"
         )
     elif tipo == "reunion":
-        log.info(
-            f"REUNIÓN: {datos.get('nombre_negocio')} | "
-            f"Horario: {datos.get('horario')}"
+        texto = (
+            f"📅 REUNIÓN: {datos.get('nombre_negocio')} "
+            f"quiere reunirse: {datos.get('horario')}"
         )
+    else:
+        texto = f"[ValVic] Evento desconocido: {tipo} — {datos}"
 
-    # TODO (cuando 360dialog esté activo):
-    # enviar_whatsapp(VALVIC_WHATSAPP, construir_alerta(tipo, datos))
+    log.info(f"[FUNDADOR] {texto}")
+    await _enviar_whatsapp(VALVIC_WHATSAPP, texto)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -626,7 +623,7 @@ async def _manejar_mensaje(telefono: str, mensaje: str):
         guardar_mensaje(conv_id, "vicky", respuesta_agendar)
         actualizar_conv(conv_id, {"etapa": "agendar_reunion", "escalado_humano": 1})
         await _enviar_whatsapp(telefono, respuesta_agendar)
-        notificar_fundador("escalado", {
+        await notificar_fundador("escalado", {
             "nombre_negocio": prospecto.get("nombre_negocio"),
             "telefono":       telefono,
             "motivo":         "cliente pide hablar con persona",
@@ -653,7 +650,7 @@ async def _manejar_mensaje(telefono: str, mensaje: str):
         # Escalado por 3 objeciones sin resolver
         if nueva_objeciones >= 3:
             actualizaciones["escalado_humano"] = 1
-            notificar_fundador("escalado", {
+            await notificar_fundador("escalado", {
                 "nombre_negocio": prospecto.get("nombre_negocio"),
                 "telefono":       telefono,
                 "motivo":         "3 objeciones sin resolver",
@@ -688,7 +685,7 @@ async def _manejar_mensaje(telefono: str, mensaje: str):
         if prospecto.get("id"):
             db.actualizar(prospecto["id"], {"estado": "convertido"})
 
-        notificar_fundador("cierre", {
+        await notificar_fundador("cierre", {
             "nombre_negocio":    prospecto.get("nombre_negocio"),
             "telefono":          telefono,
             "servicio_acordado": cierre.get("servicio"),
@@ -709,7 +706,7 @@ async def _manejar_mensaje(telefono: str, mensaje: str):
         )
         if resultado["ok"]:
             actualizaciones["reunion_agendada"] = 1
-            notificar_fundador("reunion", {
+            await notificar_fundador("reunion", {
                 "nombre_negocio": prospecto.get("nombre_negocio"),
                 "horario":        mensaje,
             })

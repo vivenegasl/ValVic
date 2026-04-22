@@ -15,7 +15,8 @@ Mapa rápido para entender la ubicación de los archivos y la lógica del sistem
 - `login.html`, `agenda.html`: Interfaces funcionales modulares sin HTML duplicado.
 
 ### 3. `/Agentes` (Backend IA)
-- `agente_conversacion.py`: Lógica de interacción Claude/Vicky.
+- `agente_conversacion.py`: Lógica de interacción Claude/Vicky operando vía Meta API.
+- `prospector.py`: Agente de prospección automatizada operando en frío y conectando directamente a Meta Graph API v20.0.
 - `/verticals`: Configuraciones YAML de negocio (Dental, Vet, etc.).
 - `subagente_db.py`: Interfaz MySQL HeatWave.
 

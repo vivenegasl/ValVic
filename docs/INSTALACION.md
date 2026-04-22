@@ -59,7 +59,7 @@ El script copiará el proyecto a `/opt/valvic/app`. Para finalizar, debes hacer 
 ```bash
 nano /opt/valvic/app/.env
 ```
-   Aquí deberás colocar tus tokens reales de Anthropic, Meta API (o 360dialog), Google Places, y configurar `MYSQL_HOST` con la IP Privada de la BD del Paso 1, junto al usuario y contraseña.
+   Aquí deberás colocar tus tokens reales de Anthropic, Meta WhatsApp Cloud API, Google Places, y configurar `MYSQL_HOST` con la IP Privada de la BD del Paso 1, junto al usuario y contraseña.
 
 2. **Cargar la Base de Datos (Esquema MySQL):**
 Ejecuta los schemas que migramos en sesiones anteriores hacia MySQL:

@@ -63,8 +63,8 @@ APP_DIR="/opt/valvic/app"
 mkdir -p "$APP_DIR"
 
 # Si estás corriendo este script desde la carpeta del proyecto:
+# Todos los .py están en Agentes/ — no hay .py en la raíz
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cp "$SCRIPT_DIR"/*.py "$APP_DIR/" 2>/dev/null || true
 cp -r "$SCRIPT_DIR"/Agentes "$APP_DIR/" 2>/dev/null || true
 cp -r "$SCRIPT_DIR"/Database "$APP_DIR/" 2>/dev/null || true
 cp -r "$SCRIPT_DIR"/Panel "$APP_DIR/" 2>/dev/null || true
@@ -106,7 +106,7 @@ User=ubuntu
 WorkingDirectory=/opt/valvic/app
 Environment="PATH=/opt/valvic/venv/bin"
 EnvironmentFile=/opt/valvic/app/.env
-ExecStart=/opt/valvic/venv/bin/uvicorn agente_conversacion:app --host 0.0.0.0 --port 8001 --workers 1
+ExecStart=/opt/valvic/venv/bin/uvicorn Agentes.agente_conversacion:app --host 0.0.0.0 --port 8001 --workers 1
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -122,11 +122,11 @@ ok "Servicio valvic-vicky.service configurado"
 # â”€â”€ 10. Configurar cron jobs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 info "Configurando cron jobs..."
 (crontab -l 2>/dev/null; echo "# ValVic â€” Prospector veterinarias (lunes 9am)") | crontab -
-(crontab -l 2>/dev/null; echo "0 9 * * 1 cd /opt/valvic/app && /opt/valvic/venv/bin/python prospector.py --vertical veterinarias --ciudad 'Santiago' --cantidad 50 >> /var/log/valvic/prospector.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "0 9 * * 1 cd /opt/valvic/app && /opt/valvic/venv/bin/python Agentes/prospector.py --vertical veterinarias --ciudad 'Santiago' --cantidad 50 >> /var/log/valvic/prospector.log 2>&1") | crontab -
 (crontab -l 2>/dev/null; echo "# ValVic â€” Actualizar openers (lunes 9:30am, despuÃ©s del prospector)") | crontab -
-(crontab -l 2>/dev/null; echo "30 9 * * 1 cd /opt/valvic/app && /opt/valvic/venv/bin/python actualizar_openers.py --cantidad 50 >> /var/log/valvic/openers.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "30 9 * * 1 cd /opt/valvic/app && /opt/valvic/venv/bin/python Agentes/actualizar_openers.py --cantidad 50 >> /var/log/valvic/openers.log 2>&1") | crontab -
 (crontab -l 2>/dev/null; echo "# ValVic â€” Backup MySQL â†’ OCI Object Storage (3 AM diario)") | crontab -
-(crontab -l 2>/dev/null; echo "0 3 * * * /opt/valvic/venv/bin/python /opt/valvic/app/backup_mysql.py >> /var/log/valvic/backup.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "0 3 * * * /opt/valvic/venv/bin/python /opt/valvic/app/Agentes/backup_mysql.py >> /var/log/valvic/backup.log 2>&1") | crontab -
 
 mkdir -p /var/log/valvic
 sudo chown ubuntu:ubuntu /var/log/valvic
@@ -229,11 +229,14 @@ echo "     sudo systemctl status valvic-vicky"
 echo ""
 echo "  5. Instalar SSL (obligatorio para Meta Cloud API):"
 echo "     sudo apt install certbot python3-certbot-nginx -y"
-echo "     sudo certbot --nginx -d api.valvic.cl"
+echo "     sudo certbot --nginx -d api.valvic.cl -d agenda.valvic.cl"
 echo ""
 echo "  6. Configurar webhook en Meta Cloud API:"
 echo "     URL: https://api.valvic.cl/webhook/whatsapp"
 echo ""
 echo "  7. Primer prospector manual (prueba):"
-echo "     cd /opt/valvic/app && python3 prospector.py --vertical veterinarias --ciudad 'Santiago' --cantidad 10 --test"
+echo "     cd /opt/valvic/app && python3 Agentes/prospector.py --vertical veterinarias --ciudad 'Santiago' --cantidad 10 --test"
+echo ""
+echo "NOTA: La carpeta Landing/ (sitio web publico valvic.cl) se aloja en Hostinger,"
+echo "      NO en esta VM. Esta VM solo sirve la API y el Panel/CRM (agenda.valvic.cl)."
 echo ""

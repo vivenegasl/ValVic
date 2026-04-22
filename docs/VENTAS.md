@@ -63,7 +63,7 @@ ValVic es done-for-you + WhatsApp nativo → justifica 2-3x el precio de la comp
 |---|---|---|
 | Oracle VM + MySQL | Always Free | $0 |
 | Claude API (10 clientes) | ~50k tokens/mes | ~$15-25 USD/mes |
-| 360dialog WhatsApp API | Plan Básico | ~$5.50 USD/mes |
+| Meta WhatsApp Cloud API | Directo (sin intermediario) | $0 (pago por conversación) |
 | Hostinger Business | Web clientes | Incluido (ya pagado) |
 | Google Places API | 200/búsquedas semana | $0 (dentro de cuota) |
 

@@ -57,8 +57,8 @@ log = logging.getLogger("prospector")
 # ─── credenciales ────────────────────────────────────────────────────────────
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 GOOGLE_PLACES_KEY = os.getenv("GOOGLE_PLACES_API_KEY", "")
-DIALOG360_KEY     = os.getenv("DIALOG360_API_KEY", "")
-DIALOG360_PHONE   = os.getenv("DIALOG360_PHONE_ID", "")
+META_ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN", "")
+META_PHONE_NUMBER_ID = os.getenv("META_PHONE_NUMBER_ID", "")
 
 claude_sync  = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 claude_async = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
@@ -462,35 +462,44 @@ def procesar_envio(p: dict, modo_test: bool = False) -> dict:
         log.info(f"[TEST] → {nombre}: {mensaje[:60]}...")
         return {"ok": True, "metodo": "test", "url_wame": url_wame, "nombre": nombre}
 
-    if DIALOG360_KEY and DIALOG360_PHONE:
-        template_name = os.getenv("DIALOG360_TEMPLATE_NAME", "contacto_frio_valvic")
+    if META_ACCESS_TOKEN and META_PHONE_NUMBER_ID:
+        template_name = os.getenv("META_TEMPLATE_NAME", "contacto_frio_valvic")
         try:
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": tel,
+                "type": "template",
+                "template": {
+                    "name": template_name,
+                    "language": {"code": "es"},
+                    "components": [
+                        {
+                            "type": "body",
+                            "parameters": [
+                                {"type": "text", "text": mensaje}
+                            ]
+                        }
+                    ]
+                }
+            }
             resp = httpx.post(
-                "https://waba.360dialog.io/v1/messages",
-                headers = {"D360-API-KEY": DIALOG360_KEY, "Content-Type": "application/json"},
-                json    = {
-                    "to": f"+{tel}",
-                    "type": "template",
-                    "template": {
-                        "name": template_name,
-                        "language": {"code": "es"},
-                        "components": [
-                            {
-                                "type": "body",
-                                "parameters": [
-                                    {"type": "text", "text": mensaje}
-                                ]
-                            }
-                        ]
-                    }
+                f"https://graph.facebook.com/v20.0/{META_PHONE_NUMBER_ID}/messages",
+                headers = {
+                    "Authorization": f"Bearer {META_ACCESS_TOKEN}",
+                    "Content-Type": "application/json"
                 },
+                json = payload,
                 timeout = 10,
             )
             resp.raise_for_status()
-            return {"ok": True, "metodo": "360dialog", "url_wame": url_wame, "nombre": nombre}
+            log.info(f"[META] Template '{template_name}' enviado a {nombre} ({tel})")
+            return {"ok": True, "metodo": "meta_api", "url_wame": url_wame, "nombre": nombre}
+        except httpx.HTTPStatusError as e:
+            log.error(f"[META] Error HTTP al enviar a {nombre}: {e.response.status_code} — {e.response.text}")
+            return {"ok": False, "metodo": "meta_api", "error": str(e), "nombre": nombre}
         except Exception as e:
-            log.error(f"360dialog error {nombre}: {e}")
-            return {"ok": False, "metodo": "360dialog", "error": str(e), "nombre": nombre}
+            log.error(f"[META] Error inesperado al enviar a {nombre}: {e}")
+            return {"ok": False, "metodo": "meta_api", "error": str(e), "nombre": nombre}
 
     return {"ok": True, "metodo": "wame_link", "url_wame": url_wame, "nombre": nombre}
 
@@ -599,7 +608,7 @@ async def orquestar(cfg: dict, ciudad: str, cantidad: int, modo_test: bool, envi
     print(f"\n{'─' * 56}")
     print(f"  FASE 3 — Envío")
     print(f"  Con teléfono, listos: {len(listos_db)}")
-    print(f"  Método: {'360dialog' if DIALOG360_KEY else 'Links wa.me (clic manual)'}")
+    print(f"  Método: {'Meta API' if META_ACCESS_TOKEN else 'Links wa.me (clic manual)'}")
 
     if not enviar and not modo_test:
         print("\n  Usa --enviar para enviar o --solo-revisar para revisar uno por uno")
