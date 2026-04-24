@@ -2,8 +2,7 @@
 
 > **Hola Gissele 💜**
 > Necesito tu cerebro (y tus ganas) para hacer que esto funcione.
-> Si estás leyendo esto, es porque confío en ti para construir algo increíble juntos.
-> Bienvenida al equipo. 🚀
+> Si estás leyendo esto, es porque confío en ti para construir algo increíble.
 
 ---
 
